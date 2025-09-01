@@ -23,11 +23,50 @@ A Flask-based backend system for managing project finance with partner shares, w
 
 ## Running the Application
 
+### Local Development
 ```bash
-python app.py
+python3 app.py
 ```
 
 The application will start on `http://localhost:5000` with debug mode enabled.
+
+### Production (Render)
+The application is configured to run on Render with the following files:
+- `Procfile` - Defines the web process
+- `requirements.txt` - Python dependencies including Gunicorn
+- `runtime.txt` - Python version specification
+- `render.yaml` - Render deployment configuration
+- `wsgi.py` - WSGI entry point
+
+### Deploy to Render
+
+#### Method 1: Using render.yaml (Recommended)
+1. **Push your code to GitHub**
+2. **Connect your repository to Render**
+3. **Render will automatically detect the `render.yaml` file**
+4. **The service and database will be created automatically**
+
+#### Method 2: Manual Configuration
+1. **Connect your GitHub repository to Render**
+2. **Create a new Web Service** and select your repository
+3. **Configure the service:**
+   - **Build Command:** `pip install -r requirements.txt`
+   - **Start Command:** `gunicorn app:app`
+   - **Environment:** `Python 3`
+4. **Add Environment Variables:**
+   - `FLASK_ENV=production`
+   - `DATABASE_URL` (will be provided by Render PostgreSQL addon)
+5. **Deploy!**
+
+#### Method 3: Using Docker
+1. **Connect your GitHub repository to Render**
+2. **Select "Docker" as the environment**
+3. **Render will automatically use the Dockerfile**
+
+### Environment Variables for Render
+- `FLASK_ENV=production` - Sets Flask to production mode
+- `DATABASE_URL` - Automatically provided by Render PostgreSQL addon
+- `PORT` - Automatically set by Render (usually 10000)
 
 ## Database
 

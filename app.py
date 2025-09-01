@@ -100,10 +100,7 @@ class ProjectPartner(db.Model, TimestampMixin):
         CheckConstraint('share_pct >= 0 AND share_pct <= 100', name='ck_share_pct_range'),
     )
     
-    # Relationships
-    settlement_lines = db.relationship('PartnerSettleLine', backref='project_partner', cascade='all, delete-orphan')
-    claims_as_debtor = db.relationship('PartnerClaim', foreign_keys='PartnerClaim.from_partner_id', backref='debtor_partner')
-    claims_as_creditor = db.relationship('PartnerClaim', foreign_keys='PartnerClaim.to_partner_id', backref='creditor_partner')
+    # Relationships will be added later when needed
 
 class Supplier(db.Model, TimestampMixin):
     __tablename__ = 'suppliers'
@@ -258,6 +255,9 @@ class PartnerSettleLine(db.Model, TimestampMixin):
     should_bear_amount = db.Column(db.Numeric(14, 2), nullable=False)
     actually_paid_amount = db.Column(db.Numeric(14, 2), nullable=False)
     diff_amount = db.Column(db.Numeric(14, 2), nullable=False)
+    
+    # Relationships
+    partner = db.relationship('Partner', backref='settlement_lines')
 
 class PartnerClaim(db.Model, TimestampMixin):
     __tablename__ = 'partner_claims'
@@ -620,13 +620,194 @@ def withdraw_from_wallet():
         'new_balance': float(project_partner.wallet_balance)
     })), 201
 
-# Import additional routes
-try:
-    from routes import *
-except ImportError:
-    pass  # Routes will be loaded when routes.py is available
+# Additional API Routes (moved from routes.py to avoid circular imports)
+
+# Supplier endpoints
+@app.route('/api/suppliers', methods=['POST'])
+def create_supplier():
+    """Create a new supplier."""
+    data = request.get_json()
+    
+    if not data or 'name' not in data:
+        return jsonify(error_response('INVALID_DATA', 'Missing required field: name')), 400
+    
+    supplier = Supplier(name=data['name'])
+    db.session.add(supplier)
+    db.session.commit()
+    
+    return jsonify(ok_response({
+        'id': supplier.id,
+        'name': supplier.name
+    })), 201
+
+# Item endpoints
+@app.route('/api/items', methods=['POST'])
+def create_item():
+    """Create a new item."""
+    data = request.get_json()
+    
+    if not data or 'sku' not in data or 'name' not in data:
+        return jsonify(error_response('INVALID_DATA', 'Missing required fields: sku, name')), 400
+    
+    # Check if SKU already exists
+    existing = Item.query.filter_by(sku=data['sku']).first()
+    if existing:
+        return jsonify(error_response('DUPLICATE_SKU', 'Item SKU already exists')), 400
+    
+    item = Item(
+        sku=data['sku'],
+        name=data['name'],
+        uom=data.get('uom', 'unit'),
+        std_cost=quantize_decimal(Decimal(str(data.get('std_cost', 0))))
+    )
+    
+    db.session.add(item)
+    db.session.commit()
+    
+    return jsonify(ok_response({
+        'id': item.id,
+        'sku': item.sku,
+        'name': item.name,
+        'uom': item.uom,
+        'std_cost': float(item.std_cost)
+    })), 201
+
+# Warehouse endpoints
+@app.route('/api/projects/<project_id>/warehouses', methods=['POST'])
+def create_warehouse():
+    """Create a new warehouse for a project."""
+    project_id = request.view_args['project_id']
+    data = request.get_json()
+    
+    if not data or 'name' not in data:
+        return jsonify(error_response('INVALID_DATA', 'Missing required field: name')), 400
+    
+    # Validate project exists
+    project = Project.query.get(project_id)
+    if not project:
+        return jsonify(error_response('NOT_FOUND', 'Project not found')), 404
+    
+    warehouse = Warehouse(
+        project_id=project_id,
+        name=data['name']
+    )
+    
+    db.session.add(warehouse)
+    db.session.commit()
+    
+    return jsonify(ok_response({
+        'id': warehouse.id,
+        'project_id': warehouse.project_id,
+        'name': warehouse.name
+    })), 201
+
+# Stage endpoints
+@app.route('/api/projects/<project_id>/stages', methods=['POST'])
+def create_stage():
+    """Create a new stage for a project."""
+    project_id = request.view_args['project_id']
+    data = request.get_json()
+    
+    if not data or 'name' not in data:
+        return jsonify(error_response('INVALID_DATA', 'Missing required field: name')), 400
+    
+    # Validate project exists
+    project = Project.query.get(project_id)
+    if not project:
+        return jsonify(error_response('NOT_FOUND', 'Project not found')), 404
+    
+    stage = Stage(
+        project_id=project_id,
+        name=data['name'],
+        budget=quantize_decimal(Decimal(str(data.get('budget', 0))))
+    )
+    
+    db.session.add(stage)
+    db.session.commit()
+    
+    return jsonify(ok_response({
+        'id': stage.id,
+        'project_id': stage.project_id,
+        'name': stage.name,
+        'budget': float(stage.budget),
+        'status': stage.status
+    })), 201
+
+# Expense endpoints
+@app.route('/api/expenses', methods=['POST'])
+def create_expense():
+    """Create a new expense."""
+    data = request.get_json()
+    
+    if not data or 'project_id' not in data or 'amount' not in data:
+        return jsonify(error_response('INVALID_DATA', 'Missing required fields: project_id, amount')), 400
+    
+    # Validate project exists
+    project = Project.query.get(data['project_id'])
+    if not project:
+        return jsonify(error_response('NOT_FOUND', 'Project not found')), 404
+    
+    # Validate stage if provided
+    if data.get('stage_id'):
+        stage = Stage.query.get(data['stage_id'])
+        if not stage:
+            return jsonify(error_response('NOT_FOUND', 'Stage not found')), 404
+    
+    amount = quantize_decimal(Decimal(str(data['amount'])))
+    if amount <= 0:
+        return jsonify(error_response('INVALID_AMOUNT', 'Amount must be positive')), 400
+    
+    expense = Expense(
+        project_id=data['project_id'],
+        stage_id=data.get('stage_id'),
+        date=parse_date(data['date']).date() if data.get('date') else date.today(),
+        amount=amount,
+        payee_type=data.get('payee_type', 'other'),
+        payee_id=data.get('payee_id'),
+        description=data.get('description')
+    )
+    
+    db.session.add(expense)
+    db.session.commit()
+    
+    return jsonify(ok_response({
+        'id': expense.id,
+        'project_id': expense.project_id,
+        'stage_id': expense.stage_id,
+        'amount': float(expense.amount),
+        'date': expense.date.isoformat(),
+        'payee_type': expense.payee_type,
+        'payee_id': expense.payee_id,
+        'description': expense.description
+    })), 201
+
+# Stage cost endpoint
+@app.route('/api/stages/<stage_id>/cost', methods=['GET'])
+def get_stage_cost():
+    """Get stage cost breakdown."""
+    stage_id = request.view_args['stage_id']
+    
+    # Validate stage exists
+    stage = Stage.query.get(stage_id)
+    if not stage:
+        return jsonify(error_response('NOT_FOUND', 'Stage not found')), 404
+    
+    cost_breakdown = calculate_stage_cost(stage_id)
+    
+    return jsonify(ok_response({
+        'stage_id': stage_id,
+        'stage_name': stage.name,
+        'expenses': float(cost_breakdown['expenses']),
+        'materials': float(cost_breakdown['materials']),
+        'total': float(cost_breakdown['total'])
+    }))
 
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    
+    # Get port from environment variable (for Render)
+    port = int(os.environ.get('PORT', 5000))
+    debug = os.environ.get('FLASK_ENV') == 'development'
+    
+    app.run(debug=debug, host='0.0.0.0', port=port)

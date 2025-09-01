@@ -1,0 +1,43 @@
+{
+  "name": "Musharaka Pro",
+  "description": "Project Finance Management System",
+  "repository": "https://github.com/yourusername/musharaka-pro",
+  "logo": "https://via.placeholder.com/150x150/4CAF50/FFFFFF?text=MP",
+  "keywords": [
+    "flask",
+    "python",
+    "finance",
+    "project-management",
+    "partnership"
+  ],
+  "stack": "heroku-22",
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ],
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "addons": [
+    {
+      "plan": "heroku-postgresql:mini"
+    }
+  ],
+  "env": {
+    "FLASK_ENV": {
+      "description": "Flask environment",
+      "value": "production"
+    },
+    "PYTHONPATH": {
+      "description": "Python path",
+      "value": "."
+    }
+  },
+  "scripts": {
+    "postdeploy": "python3 -c 'from app import app, db; app.app_context().push(); db.create_all()'"
+  }
+}
