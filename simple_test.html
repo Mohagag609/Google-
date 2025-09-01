@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار بسيط</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-2xl mx-auto">
+        <h1 class="text-3xl font-bold text-center mb-8">اختبار الأزرار</h1>
+        
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <button onclick="testButton()" 
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 w-full">
+                اختبار الزر
+            </button>
+            
+            <div id="result" class="mt-4 p-4 bg-gray-100 rounded-lg hidden">
+                <p class="text-green-600 font-bold">✅ الزر يعمل!</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function testButton() {
+            console.log('تم الضغط على الزر');
+            document.getElementById('result').classList.remove('hidden');
+            alert('الزر يعمل!');
+        }
+    </script>
+</body>
+</html>

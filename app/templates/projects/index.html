@@ -231,21 +231,28 @@
 <script>
 // Enhanced UI Functions
 function toggleProjectForm() {
+    console.log('toggleProjectForm called');
     const form = document.getElementById('project-form');
-    form.classList.toggle('hidden');
-    
-    // Add smooth animation
-    if (!form.classList.contains('hidden')) {
-        form.style.opacity = '0';
-        form.style.transform = 'translateY(-20px)';
-        setTimeout(() => {
-            form.style.opacity = '1';
-            form.style.transform = 'translateY(0)';
-        }, 10);
+    if (form) {
+        form.classList.toggle('hidden');
+        console.log('Form toggled, hidden:', form.classList.contains('hidden'));
+        
+        // Add smooth animation
+        if (!form.classList.contains('hidden')) {
+            form.style.opacity = '0';
+            form.style.transform = 'translateY(-20px)';
+            setTimeout(() => {
+                form.style.opacity = '1';
+                form.style.transform = 'translateY(0)';
+            }, 10);
+        }
+    } else {
+        console.error('Form element not found');
     }
 }
 
 function refreshProjects() {
+    console.log('refreshProjects called');
     // Show loading state
     showToast('جاري تحديث البيانات...', 'info');
     
@@ -263,6 +270,7 @@ function editProject(projectId) {
 // Enhanced toast function
 if (typeof showToast === 'undefined') {
     function showToast(message, type = 'success') {
+        console.log('showToast called:', message, type);
         const toast = document.createElement('div');
         toast.className = `fixed top-4 right-4 z-50 p-4 rounded-xl shadow-2xl max-w-sm transform transition-all duration-500 ${
             type === 'success' ? 'bg-gradient-to-r from-green-500 to-green-600 text-white' : 
@@ -303,8 +311,16 @@ if (typeof showToast === 'undefined') {
 
 // Add smooth scrolling and animations
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing...');
+    
+    // Test if functions are available
+    console.log('toggleProjectForm available:', typeof toggleProjectForm);
+    console.log('refreshProjects available:', typeof refreshProjects);
+    console.log('showToast available:', typeof showToast);
+    
     // Add loading states to buttons
     const buttons = document.querySelectorAll('button[type="submit"]');
+    console.log('Found submit buttons:', buttons.length);
     buttons.forEach(button => {
         button.addEventListener('click', function() {
             this.innerHTML = '<span class="animate-spin">⏳</span> جاري المعالجة...';
@@ -314,6 +330,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Add hover effects to table rows
     const tableRows = document.querySelectorAll('tbody tr');
+    console.log('Found table rows:', tableRows.length);
     tableRows.forEach(row => {
         row.addEventListener('mouseenter', function() {
             this.style.transform = 'scale(1.02)';
@@ -322,6 +339,17 @@ document.addEventListener('DOMContentLoaded', function() {
             this.style.transform = 'scale(1)';
         });
     });
+    
+    // Test button click
+    const testButton = document.querySelector('button[onclick="toggleProjectForm()"]');
+    if (testButton) {
+        console.log('Test button found, adding click listener');
+        testButton.addEventListener('click', function() {
+            console.log('Button clicked via event listener');
+        });
+    } else {
+        console.log('Test button not found');
+    }
 });
 </script>
 {% endblock %}
