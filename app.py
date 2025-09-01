@@ -4,14 +4,14 @@ Musharaka Pro - Flask Application
 """
 
 import os
+import sys
 from datetime import datetime, date
 from decimal import Decimal
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 from werkzeug.exceptions import BadRequest
 
-import sys
-import os
-sys.path.append(os.path.join(os.path.dirname(__file__), 'app'))
+# Add app directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'app'))
 
 from db import init_db
 from models import *
