@@ -157,46 +157,163 @@
             font-weight: bold;
         }
 
-        .api-section {
-            background: #2c3e50;
-            color: white;
+        .forms-section {
+            background: white;
             border-radius: 15px;
             padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             margin-bottom: 30px;
         }
 
-        .api-title {
-            font-size: 1.8rem;
-            margin-bottom: 20px;
-            color: #ecf0f1;
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
         }
 
-        .api-endpoint {
-            background: #34495e;
+        .form-card {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+
+        .form-title {
+            font-size: 1.3rem;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: white;
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
             padding: 15px;
             border-radius: 8px;
-            margin-bottom: 10px;
-            font-family: 'Courier New', monospace;
-            border-left: 4px solid #3498db;
+            margin: 15px 0;
+            border: 1px solid #c3e6cb;
+            display: none;
         }
 
-        .method {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 1px solid #f5c6cb;
+            display: none;
+        }
+
+        .partners-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .partner-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .partner-card:hover {
+            background: #e3f2fd;
+            border-color: #667eea;
+        }
+
+        .partner-name {
+            font-size: 1.2rem;
             font-weight: bold;
-            margin-left: 10px;
+            color: #333;
+            margin-bottom: 10px;
         }
 
-        .method-get {
-            background: #27ae60;
-            color: white;
+        .partner-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
         }
 
-        .method-post {
-            background: #e74c3c;
-            color: white;
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .detail-label {
+            font-weight: bold;
+            color: #666;
+        }
+
+        .detail-value {
+            color: #333;
         }
 
         .loading {
@@ -264,27 +381,110 @@
             </div>
         </div>
 
-        <div class="api-section">
-            <h2 class="api-title">🔗 API Endpoints</h2>
-            <div class="api-endpoint">
-                <span class="method method-get">GET</span>
-                <strong>/api/projects</strong> - عرض جميع المشاريع
+        <div class="forms-section">
+            <h2 class="section-title">➕ إضافة بيانات جديدة</h2>
+            <div class="form-grid">
+                <div class="form-card">
+                    <h3 class="form-title">🏗️ مشروع جديد</h3>
+                    <form id="projectForm">
+                        <div class="form-group">
+                            <label class="form-label" for="projectCode">كود المشروع:</label>
+                            <input type="text" id="projectCode" class="form-input" placeholder="مثال: PROJ001" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="projectName">اسم المشروع:</label>
+                            <input type="text" id="projectName" class="form-input" placeholder="مثال: مشروع تجريبي" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="projectCurrency">العملة الأساسية:</label>
+                            <select id="projectCurrency" class="form-select" required>
+                                <option value="EGP">جنيه مصري (EGP)</option>
+                                <option value="USD">دولار أمريكي (USD)</option>
+                                <option value="EUR">يورو (EUR)</option>
+                                <option value="SAR">ريال سعودي (SAR)</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn">إنشاء المشروع</button>
+                    </form>
+                    <div id="projectSuccess" class="success-message"></div>
+                    <div id="projectError" class="error-message"></div>
+                </div>
+
+                <div class="form-card">
+                    <h3 class="form-title">👥 شريك جديد</h3>
+                    <form id="partnerForm">
+                        <div class="form-group">
+                            <label class="form-label" for="partnerName">اسم الشريك:</label>
+                            <input type="text" id="partnerName" class="form-input" placeholder="مثال: أحمد محمد" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="partnerEmail">البريد الإلكتروني:</label>
+                            <input type="email" id="partnerEmail" class="form-input" placeholder="مثال: ahmed@example.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="partnerPhone">رقم الهاتف:</label>
+                            <input type="tel" id="partnerPhone" class="form-input" placeholder="مثال: 01234567890" required>
+                        </div>
+                        <button type="submit" class="btn">إضافة الشريك</button>
+                    </form>
+                    <div id="partnerSuccess" class="success-message"></div>
+                    <div id="partnerError" class="error-message"></div>
+                </div>
+
+                <div class="form-card">
+                    <h3 class="form-title">🏪 مورد جديد</h3>
+                    <form id="supplierForm">
+                        <div class="form-group">
+                            <label class="form-label" for="supplierName">اسم المورد:</label>
+                            <input type="text" id="supplierName" class="form-input" placeholder="مثال: شركة المواد" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="supplierContact">جهة الاتصال:</label>
+                            <input type="text" id="supplierContact" class="form-input" placeholder="مثال: محمد أحمد" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="supplierPhone">رقم الهاتف:</label>
+                            <input type="tel" id="supplierPhone" class="form-input" placeholder="مثال: 01234567890" required>
+                        </div>
+                        <button type="submit" class="btn">إضافة المورد</button>
+                    </form>
+                    <div id="supplierSuccess" class="success-message"></div>
+                    <div id="supplierError" class="error-message"></div>
+                </div>
+
+                <div class="form-card">
+                    <h3 class="form-title">📦 صنف جديد</h3>
+                    <form id="itemForm">
+                        <div class="form-group">
+                            <label class="form-label" for="itemCode">كود الصنف:</label>
+                            <input type="text" id="itemCode" class="form-input" placeholder="مثال: ITEM001" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="itemName">اسم الصنف:</label>
+                            <input type="text" id="itemName" class="form-input" placeholder="مثال: أسمنت" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="itemUnit">الوحدة:</label>
+                            <select id="itemUnit" class="form-select" required>
+                                <option value="كيلو">كيلو</option>
+                                <option value="طن">طن</option>
+                                <option value="متر">متر</option>
+                                <option value="قطعة">قطعة</option>
+                                <option value="لتر">لتر</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn">إضافة الصنف</button>
+                    </form>
+                    <div id="itemSuccess" class="success-message"></div>
+                    <div id="itemError" class="error-message"></div>
+                </div>
             </div>
-            <div class="api-endpoint">
-                <span class="method method-post">POST</span>
-                <strong>/api/projects</strong> - إنشاء مشروع جديد
-            </div>
-            <div class="api-endpoint">
-                <span class="method method-post">POST</span>
-                <strong>/api/partners</strong> - إنشاء شريك جديد
-            </div>
-            <div class="api-endpoint">
-                <span class="method method-post">POST</span>
-                <strong>/api/suppliers</strong> - إنشاء مورد جديد
-            </div>
-            <div class="api-endpoint">
-                <span class="method method-post">POST</span>
-                <strong>/api/items</strong> - إنشاء صنف جديد
+        </div>
+
+        <div class="partners-section">
+            <h2 class="section-title">👥 الشركاء المسجلون</h2>
+            <div id="partnersContainer">
+                <div class="loading">جاري تحميل الشركاء...</div>
             </div>
         </div>
     </div>
@@ -293,6 +493,8 @@
         // تحميل البيانات عند فتح الصفحة
         document.addEventListener('DOMContentLoaded', function() {
             loadProjects();
+            loadPartners();
+            setupFormHandlers();
         });
 
         async function loadProjects() {
@@ -308,6 +510,22 @@
                 }
             } catch (error) {
                 showError('خطأ في الاتصال بالخادم');
+                console.error('Error:', error);
+            }
+        }
+
+        async function loadPartners() {
+            try {
+                const response = await fetch('/api/partners');
+                const data = await response.json();
+                
+                if (data.ok) {
+                    displayPartners(data.data);
+                } else {
+                    document.getElementById('partnersContainer').innerHTML = '<div class="loading">لا توجد شركاء حالياً</div>';
+                }
+            } catch (error) {
+                document.getElementById('partnersContainer').innerHTML = '<div class="error">خطأ في تحميل الشركاء</div>';
                 console.error('Error:', error);
             }
         }
@@ -353,6 +571,140 @@
         function updateStats(projects) {
             document.getElementById('totalProjects').textContent = projects.length;
             // يمكن إضافة المزيد من الإحصائيات هنا
+        }
+
+        function displayPartners(partners) {
+            const container = document.getElementById('partnersContainer');
+            
+            if (partners.length === 0) {
+                container.innerHTML = '<div class="loading">لا توجد شركاء حالياً</div>';
+                return;
+            }
+
+            const partnersHTML = partners.map(partner => `
+                <div class="partner-card">
+                    <div class="partner-name">${partner.name}</div>
+                    <div class="partner-details">
+                        <div class="detail-item">
+                            <span class="detail-label">البريد الإلكتروني:</span>
+                            <span class="detail-value">${partner.email}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">رقم الهاتف:</span>
+                            <span class="detail-value">${partner.phone}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">تاريخ التسجيل:</span>
+                            <span class="detail-value">${new Date(partner.created_at).toLocaleDateString('ar-EG')}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">معرف الشريك:</span>
+                            <span class="detail-value">${partner.id.substring(0, 8)}...</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = partnersHTML;
+        }
+
+        function setupFormHandlers() {
+            // Project form
+            document.getElementById('projectForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const formData = {
+                    code: document.getElementById('projectCode').value,
+                    name: document.getElementById('projectName').value,
+                    base_currency: document.getElementById('projectCurrency').value
+                };
+                
+                await submitForm('/api/projects', formData, 'projectSuccess', 'projectError', 'projectForm');
+            });
+
+            // Partner form
+            document.getElementById('partnerForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const formData = {
+                    name: document.getElementById('partnerName').value,
+                    email: document.getElementById('partnerEmail').value,
+                    phone: document.getElementById('partnerPhone').value
+                };
+                
+                await submitForm('/api/partners', formData, 'partnerSuccess', 'partnerError', 'partnerForm');
+            });
+
+            // Supplier form
+            document.getElementById('supplierForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const formData = {
+                    name: document.getElementById('supplierName').value,
+                    contact_person: document.getElementById('supplierContact').value,
+                    phone: document.getElementById('supplierPhone').value
+                };
+                
+                await submitForm('/api/suppliers', formData, 'supplierSuccess', 'supplierError', 'supplierForm');
+            });
+
+            // Item form
+            document.getElementById('itemForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const formData = {
+                    code: document.getElementById('itemCode').value,
+                    name: document.getElementById('itemName').value,
+                    unit: document.getElementById('itemUnit').value
+                };
+                
+                await submitForm('/api/items', formData, 'itemSuccess', 'itemError', 'itemForm');
+            });
+        }
+
+        async function submitForm(url, data, successId, errorId, formId) {
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.ok) {
+                    showSuccess(successId, 'تم الحفظ بنجاح!');
+                    document.getElementById(formId).reset();
+                    
+                    // Refresh data
+                    if (url.includes('projects')) {
+                        loadProjects();
+                    } else if (url.includes('partners')) {
+                        loadPartners();
+                    }
+                } else {
+                    showError(errorId, result.error || 'حدث خطأ أثناء الحفظ');
+                }
+            } catch (error) {
+                showError(errorId, 'خطأ في الاتصال بالخادم');
+                console.error('Error:', error);
+            }
+        }
+
+        function showSuccess(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.style.display = 'block';
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 3000);
+        }
+
+        function showError(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.style.display = 'block';
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 5000);
         }
 
         function showError(message) {

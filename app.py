@@ -86,9 +86,20 @@ class Partner(db.Model, TimestampMixin):
     
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     name = db.Column(db.String(200), nullable=False)
+    email = db.Column(db.String(200))
+    phone = db.Column(db.String(50))
     
     # Relationships
     project_partners = db.relationship('ProjectPartner', backref='partner', cascade='all, delete-orphan')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'email': self.email,
+            'phone': self.phone,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
 
 class ProjectPartner(db.Model, TimestampMixin):
     __tablename__ = 'project_partners'
@@ -112,9 +123,20 @@ class Supplier(db.Model, TimestampMixin):
     
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     name = db.Column(db.String(200), nullable=False)
+    contact_person = db.Column(db.String(200))
+    phone = db.Column(db.String(50))
     
     # Relationships
     purchase_invoices = db.relationship('PurchaseInvoice', backref='supplier', cascade='all, delete-orphan')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'contact_person': self.contact_person,
+            'phone': self.phone,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
 
 class Item(db.Model, TimestampMixin):
     __tablename__ = 'items'
@@ -128,6 +150,16 @@ class Item(db.Model, TimestampMixin):
     # Relationships
     purchase_invoice_items = db.relationship('PurchaseInvoiceItem', backref='item', cascade='all, delete-orphan')
     stock_moves = db.relationship('StockMove', backref='item', cascade='all, delete-orphan')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'sku': self.sku,
+            'name': self.name,
+            'uom': self.uom,
+            'std_cost': float(self.std_cost) if self.std_cost else 0,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
 
 class Warehouse(db.Model, TimestampMixin):
     __tablename__ = 'warehouses'
@@ -467,6 +499,15 @@ def list_projects():
     } for p in projects]))
 
 # Partner endpoints
+@app.route('/api/partners', methods=['GET'])
+def get_partners():
+    """Get all partners."""
+    try:
+        partners = Partner.query.all()
+        return jsonify(ok_response([partner.to_dict() for partner in partners]))
+    except Exception as e:
+        return jsonify(error_response('FETCH_ERROR', str(e))), 500
+
 @app.route('/api/partners', methods=['POST'])
 def create_partner():
     """Create a new partner."""
@@ -475,14 +516,15 @@ def create_partner():
     if not data or 'name' not in data:
         return jsonify(error_response('INVALID_DATA', 'Missing required field: name')), 400
     
-    partner = Partner(name=data['name'])
+    partner = Partner(
+        name=data['name'],
+        email=data.get('email'),
+        phone=data.get('phone')
+    )
     db.session.add(partner)
     db.session.commit()
     
-    return jsonify(ok_response({
-        'id': partner.id,
-        'name': partner.name
-    })), 201
+    return jsonify(ok_response(partner.to_dict())), 201
 
 @app.route('/api/projects/<project_id>/partners', methods=['POST'])
 def add_partner_to_project():
@@ -633,6 +675,15 @@ def withdraw_from_wallet():
 # Additional API Routes (moved from routes.py to avoid circular imports)
 
 # Supplier endpoints
+@app.route('/api/suppliers', methods=['GET'])
+def get_suppliers():
+    """Get all suppliers."""
+    try:
+        suppliers = Supplier.query.all()
+        return jsonify(ok_response([supplier.to_dict() for supplier in suppliers]))
+    except Exception as e:
+        return jsonify(error_response('FETCH_ERROR', str(e))), 500
+
 @app.route('/api/suppliers', methods=['POST'])
 def create_supplier():
     """Create a new supplier."""
@@ -641,16 +692,26 @@ def create_supplier():
     if not data or 'name' not in data:
         return jsonify(error_response('INVALID_DATA', 'Missing required field: name')), 400
     
-    supplier = Supplier(name=data['name'])
+    supplier = Supplier(
+        name=data['name'],
+        contact_person=data.get('contact_person'),
+        phone=data.get('phone')
+    )
     db.session.add(supplier)
     db.session.commit()
     
-    return jsonify(ok_response({
-        'id': supplier.id,
-        'name': supplier.name
-    })), 201
+    return jsonify(ok_response(supplier.to_dict())), 201
 
 # Item endpoints
+@app.route('/api/items', methods=['GET'])
+def get_items():
+    """Get all items."""
+    try:
+        items = Item.query.all()
+        return jsonify(ok_response([item.to_dict() for item in items]))
+    except Exception as e:
+        return jsonify(error_response('FETCH_ERROR', str(e))), 500
+
 @app.route('/api/items', methods=['POST'])
 def create_item():
     """Create a new item."""
@@ -674,13 +735,7 @@ def create_item():
     db.session.add(item)
     db.session.commit()
     
-    return jsonify(ok_response({
-        'id': item.id,
-        'sku': item.sku,
-        'name': item.name,
-        'uom': item.uom,
-        'std_cost': float(item.std_cost)
-    })), 201
+    return jsonify(ok_response(item.to_dict())), 201
 
 # Warehouse endpoints
 @app.route('/api/projects/<project_id>/warehouses', methods=['POST'])
