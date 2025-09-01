@@ -21,7 +21,9 @@ from utils import d, ValidationError, BusinessRuleError
 
 def create_app():
     """Create and configure Flask application."""
-    app = Flask(__name__)
+    # Set template folder to app/templates
+    template_dir = os.path.join(os.path.dirname(__file__), 'app', 'templates')
+    app = Flask(__name__, template_folder=template_dir)
     
     # Configuration
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
