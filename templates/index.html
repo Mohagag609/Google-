@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مشاركة برو - نظام إدارة المشاريع المالية</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 1.1rem;
+            color: #666;
+        }
+
+        .projects-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            color: #333;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .project-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .project-card:hover {
+            background: #e3f2fd;
+            border-color: #667eea;
+        }
+
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .project-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .project-code {
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .project-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .detail-label {
+            font-weight: bold;
+            color: #666;
+        }
+
+        .detail-value {
+            color: #333;
+        }
+
+        .status-open {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .currency {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .api-section {
+            background: #2c3e50;
+            color: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .api-title {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #ecf0f1;
+        }
+
+        .api-endpoint {
+            background: #34495e;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-family: 'Courier New', monospace;
+            border-left: 4px solid #3498db;
+        }
+
+        .method {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .method-get {
+            background: #27ae60;
+            color: white;
+        }
+
+        .method-post {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #f5c6cb;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .project-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .project-details {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 مشاركة برو</h1>
+            <p>نظام إدارة المشاريع المالية المتقدم</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalProjects">-</div>
+                <div class="stat-label">إجمالي المشاريع</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalPartners">-</div>
+                <div class="stat-label">إجمالي الشركاء</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalSuppliers">-</div>
+                <div class="stat-label">إجمالي الموردين</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalItems">-</div>
+                <div class="stat-label">إجمالي الأصناف</div>
+            </div>
+        </div>
+
+        <div class="projects-section">
+            <h2 class="section-title">📋 المشاريع الحالية</h2>
+            <div id="projectsContainer">
+                <div class="loading">جاري تحميل المشاريع...</div>
+            </div>
+        </div>
+
+        <div class="api-section">
+            <h2 class="api-title">🔗 API Endpoints</h2>
+            <div class="api-endpoint">
+                <span class="method method-get">GET</span>
+                <strong>/api/projects</strong> - عرض جميع المشاريع
+            </div>
+            <div class="api-endpoint">
+                <span class="method method-post">POST</span>
+                <strong>/api/projects</strong> - إنشاء مشروع جديد
+            </div>
+            <div class="api-endpoint">
+                <span class="method method-post">POST</span>
+                <strong>/api/partners</strong> - إنشاء شريك جديد
+            </div>
+            <div class="api-endpoint">
+                <span class="method method-post">POST</span>
+                <strong>/api/suppliers</strong> - إنشاء مورد جديد
+            </div>
+            <div class="api-endpoint">
+                <span class="method method-post">POST</span>
+                <strong>/api/items</strong> - إنشاء صنف جديد
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // تحميل البيانات عند فتح الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProjects();
+        });
+
+        async function loadProjects() {
+            try {
+                const response = await fetch('/api/projects');
+                const data = await response.json();
+                
+                if (data.ok) {
+                    displayProjects(data.data);
+                    updateStats(data.data);
+                } else {
+                    showError('خطأ في تحميل المشاريع');
+                }
+            } catch (error) {
+                showError('خطأ في الاتصال بالخادم');
+                console.error('Error:', error);
+            }
+        }
+
+        function displayProjects(projects) {
+            const container = document.getElementById('projectsContainer');
+            
+            if (projects.length === 0) {
+                container.innerHTML = '<div class="loading">لا توجد مشاريع حالياً</div>';
+                return;
+            }
+
+            const projectsHTML = projects.map(project => `
+                <div class="project-card">
+                    <div class="project-header">
+                        <div class="project-name">${project.name}</div>
+                        <div class="project-code">${project.code}</div>
+                    </div>
+                    <div class="project-details">
+                        <div class="detail-item">
+                            <span class="detail-label">الحالة:</span>
+                            <span class="detail-value status-open">${project.status}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">العملة الأساسية:</span>
+                            <span class="detail-value currency">${project.base_currency}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">تاريخ الإنشاء:</span>
+                            <span class="detail-value">${new Date(project.created_at).toLocaleDateString('ar-EG')}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">معرف المشروع:</span>
+                            <span class="detail-value">${project.id.substring(0, 8)}...</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = projectsHTML;
+        }
+
+        function updateStats(projects) {
+            document.getElementById('totalProjects').textContent = projects.length;
+            // يمكن إضافة المزيد من الإحصائيات هنا
+        }
+
+        function showError(message) {
+            const container = document.getElementById('projectsContainer');
+            container.innerHTML = `<div class="error">${message}</div>`;
+        }
+    </script>
+</body>
+</html>

@@ -11,7 +11,7 @@ from datetime import datetime, date
 from decimal import Decimal, ROUND_HALF_UP
 from typing import Dict, List, Optional, Any
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Index, CheckConstraint, UniqueConstraint
 from dateutil.parser import parse as parse_date
@@ -405,7 +405,12 @@ def calculate_partner_balances(project_id: str, cutoff_date: date) -> Dict[str, 
 # API Routes
 @app.route('/', methods=['GET'])
 def root():
-    """Root endpoint."""
+    """Root endpoint - Web interface."""
+    return render_template('index.html')
+
+@app.route('/api/status', methods=['GET'])
+def api_status():
+    """API status endpoint."""
     return jsonify(ok_response({
         'name': 'Musharaka Pro (no auth)',
         'version': 1
