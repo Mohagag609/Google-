@@ -19,12 +19,12 @@ from dateutil.parser import parse as parse_date
 # Initialize Flask app
 app = Flask(__name__)
 
-# Database configuration
+# Database configuration - Force SQLite for now
 DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///musharaka.db')
 
-# Handle PostgreSQL URL format for Render
-if DATABASE_URL.startswith('postgres://'):
-    DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
+# Force SQLite to avoid PostgreSQL issues
+if 'postgres' in DATABASE_URL.lower():
+    DATABASE_URL = 'sqlite:///musharaka.db'
 
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
