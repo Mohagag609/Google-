@@ -1,0 +1,359 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ project.name }} - مشاركة برو{% endblock %}
+
+{% block content %}
+<div class="px-4 py-6 sm:px-0">
+    <!-- Project Header -->
+    <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">{{ project.name }}</h1>
+                <p class="text-gray-600">كود المشروع: {{ project.code }} | العملة: {{ project.base_currency }}</p>
+            </div>
+            <div class="text-right">
+                <span class="px-3 py-1 text-sm font-semibold rounded-full {{ 'bg-green-100 text-green-800' if project.status == 'open' else 'bg-red-100 text-red-800' }}">
+                    {{ 'مفتوح' if project.status == 'open' else 'مغلق' }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="bg-white shadow rounded-lg">
+        <div class="border-b border-gray-200">
+            <nav class="-mb-px flex space-x-8 space-x-reverse">
+                <button onclick="showTab('partners')" 
+                        id="tab-partners"
+                        class="tab-button py-2 px-1 border-b-2 font-medium text-sm border-blue-500 text-blue-600">
+                    الشركاء
+                </button>
+                <button onclick="showTab('stages')" 
+                        id="tab-stages"
+                        class="tab-button py-2 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                    المراحل
+                </button>
+                <button onclick="showTab('purchases')" 
+                        id="tab-purchases"
+                        class="tab-button py-2 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                    المشتريات
+                </button>
+                <button onclick="showTab('expenses')" 
+                        id="tab-expenses"
+                        class="tab-button py-2 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                    المصروفات
+                </button>
+                <button onclick="showTab('settlements')" 
+                        id="tab-settlements"
+                        class="tab-button py-2 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                    التسويات
+                </button>
+            </nav>
+        </div>
+
+        <!-- Partners Tab -->
+        <div id="content-partners" class="tab-content p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold">شركاء المشروع</h2>
+                <button onclick="togglePartnerForm()" 
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    ربط شريك
+                </button>
+            </div>
+
+            <!-- Link Partner Form -->
+            <div id="partner-form" class="hidden mb-6 bg-gray-50 p-4 rounded-lg">
+                <h3 class="text-lg font-medium mb-4">ربط شريك جديد</h3>
+                <form hx-post="/projects/{{ project.id }}/partners/link" 
+                      hx-target="#partners-table tbody" 
+                      hx-swap="beforeend"
+                      hx-on::after-request="this.reset(); togglePartnerForm(); showToast('تم ربط الشريك بنجاح', 'success')"
+                      class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    
+                    <div>
+                        <label for="partner_id" class="block text-sm font-medium text-gray-700 mb-2">الشريك</label>
+                        <select id="partner_id" 
+                                name="partner_id" 
+                                required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">اختر الشريك</option>
+                            {% for partner in available_partners %}
+                            <option value="{{ partner.id }}">{{ partner.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="share_pct" class="block text-sm font-medium text-gray-700 mb-2">نسبة المشاركة (%)</label>
+                        <input type="number" 
+                               id="share_pct" 
+                               name="share_pct" 
+                               step="0.01" 
+                               min="0" 
+                               max="100" 
+                               required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div class="flex items-end">
+                        <button type="submit" 
+                                class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                            ربط الشريك
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Partners Table -->
+            <div class="overflow-x-auto">
+                <table id="partners-table" class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">اسم الشريك</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">نسبة المشاركة</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">رصيد المحفظة</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">رصيد الإرجاع</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجراءات المحفظة</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for project_partner in project_partners %}
+                        <tr class="bg-white border-b hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {{ project_partner.partner.name }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ "%.2f"|format(project_partner.share_pct) }}%
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ "%.2f"|format(project_partner.wallet_balance) }} {{ project.base_currency }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ "%.2f"|format(project_partner.carry_forward_balance) }} {{ project.base_currency }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2 space-x-reverse">
+                                <!-- Deposit Form -->
+                                <form hx-post="/projects/{{ project.id }}/wallet/{{ project_partner.partner_id }}/deposit" 
+                                      hx-target="#toasts" 
+                                      hx-swap="beforeend"
+                                      class="inline-block">
+                                    <div class="flex space-x-2 space-x-reverse">
+                                        <input type="number" 
+                                               name="amount" 
+                                               step="0.01" 
+                                               min="0" 
+                                               placeholder="المبلغ" 
+                                               class="w-20 px-2 py-1 text-xs border border-gray-300 rounded"
+                                               required>
+                                        <button type="submit" 
+                                                class="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700">
+                                            إيداع
+                                        </button>
+                                    </div>
+                                </form>
+                                
+                                <!-- Withdraw Form -->
+                                <form hx-post="/projects/{{ project.id }}/wallet/{{ project_partner.partner_id }}/withdraw" 
+                                      hx-target="#toasts" 
+                                      hx-swap="beforeend"
+                                      class="inline-block">
+                                    <div class="flex space-x-2 space-x-reverse">
+                                        <input type="number" 
+                                               name="amount" 
+                                               step="0.01" 
+                                               min="0" 
+                                               placeholder="المبلغ" 
+                                               class="w-20 px-2 py-1 text-xs border border-gray-300 rounded"
+                                               required>
+                                        <button type="submit" 
+                                                class="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700">
+                                            سحب
+                                        </button>
+                                    </div>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Stages Tab -->
+        <div id="content-stages" class="tab-content p-6 hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold">مراحل المشروع</h2>
+                <button onclick="toggleStageForm()" 
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    إضافة مرحلة
+                </button>
+            </div>
+
+            <!-- Add Stage Form -->
+            <div id="stage-form" class="hidden mb-6 bg-gray-50 p-4 rounded-lg">
+                <h3 class="text-lg font-medium mb-4">إضافة مرحلة جديدة</h3>
+                <form hx-post="/projects/{{ project.id }}/stages" 
+                      hx-target="#stages-table tbody" 
+                      hx-swap="beforeend"
+                      hx-on::after-request="this.reset(); toggleStageForm(); showToast('تم إنشاء المرحلة بنجاح', 'success')"
+                      class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    
+                    <div>
+                        <label for="stage_name" class="block text-sm font-medium text-gray-700 mb-2">اسم المرحلة</label>
+                        <input type="text" 
+                               id="stage_name" 
+                               name="name" 
+                               required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label for="stage_budget" class="block text-sm font-medium text-gray-700 mb-2">الميزانية</label>
+                        <input type="number" 
+                               id="stage_budget" 
+                               name="budget" 
+                               step="0.01" 
+                               min="0" 
+                               value="0"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div class="flex items-end">
+                        <button type="submit" 
+                                class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                            إضافة المرحلة
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Stages Table -->
+            <div class="overflow-x-auto">
+                <table id="stages-table" class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">اسم المرحلة</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الميزانية</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الحالة</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">التكلفة</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for stage in stages %}
+                        <tr class="bg-white border-b hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {{ stage.name }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ "%.2f"|format(stage.budget) }} {{ project.base_currency }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ 'bg-green-100 text-green-800' if stage.status == 'open' else 'bg-red-100 text-red-800' }}">
+                                    {{ 'مفتوح' if stage.status == 'open' else 'مغلق' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <div id="st-{{ stage.id }}-cost">
+                                    <!-- Cost will be loaded here via HTMX -->
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2 space-x-reverse">
+                                <button hx-get="/stages/{{ stage.id }}/cost" 
+                                        hx-target="#st-{{ stage.id }}-cost"
+                                        class="text-blue-600 hover:text-blue-900">
+                                    تحديث التكلفة
+                                </button>
+                                <button hx-post="/stages/{{ stage.id }}/allocate/by_share" 
+                                        hx-target="#toasts" 
+                                        hx-swap="beforeend"
+                                        class="text-green-600 hover:text-green-900">
+                                    توزيع بالنسب
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Other tabs content will be added here -->
+        <div id="content-purchases" class="tab-content p-6 hidden">
+            <h2 class="text-xl font-semibold mb-4">المشتريات</h2>
+            <p class="text-gray-600">محتوى المشتريات سيتم إضافته قريباً...</p>
+        </div>
+
+        <div id="content-expenses" class="tab-content p-6 hidden">
+            <h2 class="text-xl font-semibold mb-4">المصروفات</h2>
+            <p class="text-gray-600">محتوى المصروفات سيتم إضافته قريباً...</p>
+        </div>
+
+        <div id="content-settlements" class="tab-content p-6 hidden">
+            <h2 class="text-xl font-semibold mb-4">التسويات</h2>
+            <p class="text-gray-600">محتوى التسويات سيتم إضافته قريباً...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+function showTab(tabName) {
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.add('hidden');
+    });
+    
+    // Remove active class from all tab buttons
+    document.querySelectorAll('.tab-button').forEach(button => {
+        button.classList.remove('border-blue-500', 'text-blue-600');
+        button.classList.add('border-transparent', 'text-gray-500');
+    });
+    
+    // Show selected tab content
+    document.getElementById(`content-${tabName}`).classList.remove('hidden');
+    
+    // Add active class to selected tab button
+    const activeButton = document.getElementById(`tab-${tabName}`);
+    activeButton.classList.remove('border-transparent', 'text-gray-500');
+    activeButton.classList.add('border-blue-500', 'text-blue-600');
+}
+
+function togglePartnerForm() {
+    const form = document.getElementById('partner-form');
+    form.classList.toggle('hidden');
+}
+
+function toggleStageForm() {
+    const form = document.getElementById('stage-form');
+    form.classList.toggle('hidden');
+}
+
+// Show toast function
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast-enter p-4 rounded-lg shadow-lg max-w-sm ${
+        type === 'success' ? 'bg-green-500 text-white' : 
+        type === 'error' ? 'bg-red-500 text-white' : 
+        'bg-blue-500 text-white'
+    }`;
+    toast.innerHTML = `
+        <div class="flex items-center justify-between">
+            <span>${message}</span>
+            <button onclick="this.parentElement.parentElement.remove()" class="mr-2 text-white hover:text-gray-200">
+                ×
+            </button>
+        </div>
+    `;
+    
+    document.getElementById('toasts').appendChild(toast);
+    
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.classList.remove('toast-enter');
+            toast.classList.add('toast-exit');
+            setTimeout(() => toast.remove(), 300);
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}

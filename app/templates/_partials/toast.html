@@ -1,0 +1,9 @@
+<!-- Toast partial for HTMX responses -->
+<div class="toast-enter p-4 rounded-lg shadow-lg max-w-sm {{ 'bg-green-500 text-white' if success else 'bg-red-500 text-white' }}">
+    <div class="flex items-center justify-between">
+        <span>{{ message }}</span>
+        <button onclick="this.parentElement.parentElement.remove()" class="mr-2 text-white hover:text-gray-200">
+            ×
+        </button>
+    </div>
+</div>

@@ -1,153 +1,188 @@
-# Musharaka Pro - Project Finance Management System
+# 🚀 مشاركة برو - نظام إدارة المشاريع المالية
 
-A Flask-based backend system for managing project finance with partner shares, wallet management, stock tracking, and inter-partner settlements.
+نظام إدارة المشاريع المالية المتقدم باستخدام Flask + SQLAlchemy + HTMX + Tailwind CSS.
 
-## Features
+## ✨ المميزات
 
-- **Project Management**: Create and manage projects with partner allocations
-- **Partner Wallets**: Deposit/withdraw funds with automatic balance tracking
-- **Stock Management**: Purchase invoices, stock movements, and material cost tracking
-- **Stage Management**: Track project stages with budget and cost allocation
-- **Expense Tracking**: Record various types of expenses
-- **Cost Allocation**: Allocate stage costs to partners by share or custom amounts
-- **Settlement System**: Generate inter-partner settlements with claims and carry-forward balances
-- **Reporting**: Partner statements and cost breakdowns
+- 🏗️ **إدارة المشاريع** - إنشاء وإدارة المشاريع المالية
+- 👥 **إدارة الشركاء** - ربط الشركاء بالمشاريع مع نسب المشاركة
+- 💰 **محافظ الشركاء** - إيداع وسحب مع رصيد مباشر
+- 📊 **المراحل والميزانيات** - تقسيم المشاريع لمراحل مع ميزانيات
+- 🛒 **المشتريات والمخزون** - إدارة المشتريات وتتبع المخزون
+- 📈 **توزيع التكاليف** - توزيع تكاليف المراحل على الشركاء
+- 💼 **التسويات** - تسوية حسابات الشركاء مع المطالبات
+- 📱 **واجهة تفاعلية** - HTMX للتفاعل السريع بدون إعادة تحميل
 
-## Installation
+## 🛠️ التقنيات المستخدمة
 
-1. Install Python 3.11+
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+- **Backend**: Flask + SQLAlchemy
+- **Frontend**: HTMX + Tailwind CSS
+- **Database**: SQLite (قابل للتبديل لـ PostgreSQL)
+- **Styling**: Tailwind CSS مع دعم RTL
+- **Interactions**: HTMX للتفاعل السريع
 
-## Running the Application
+## 🚀 التثبيت والتشغيل
 
-### Local Development
+### 1. تثبيت المتطلبات
+
 ```bash
-python3 app.py
+pip install -r requirements.txt
 ```
 
-The application will start on `http://localhost:5000` with debug mode enabled.
+### 2. تشغيل التطبيق
 
-### Production (Render)
-The application is configured to run on Render with the following files:
-- `Procfile` - Defines the web process
-- `requirements.txt` - Python dependencies including Gunicorn
-- `runtime.txt` - Python version specification
-- `render.yaml` - Render deployment configuration
-- `wsgi.py` - WSGI entry point
+```bash
+python app/app.py
+```
 
-### Deploy to Render
+### 3. فتح المتصفح
 
-#### Method 1: Using render.yaml (Recommended)
-1. **Push your code to GitHub**
-2. **Connect your repository to Render**
-3. **Render will automatically detect the `render.yaml` file**
-4. **The service and database will be created automatically**
+```
+http://localhost:5000
+```
 
-#### Method 2: Manual Configuration
-1. **Connect your GitHub repository to Render**
-2. **Create a new Web Service** and select your repository
-3. **Configure the service:**
-   - **Build Command:** `pip install -r requirements.txt`
-   - **Start Command:** `gunicorn app:app`
-   - **Environment:** `Python 3`
-4. **Add Environment Variables:**
-   - `FLASK_ENV=production`
-   - `DATABASE_URL` (will be provided by Render PostgreSQL addon)
-5. **Deploy!**
+## 📁 هيكل المشروع
 
-#### Method 3: Using Docker
-1. **Connect your GitHub repository to Render**
-2. **Select "Docker" as the environment**
-3. **Render will automatically use the Dockerfile**
+```
+app/
+├── app.py                 # التطبيق الرئيسي
+├── models.py              # نماذج قاعدة البيانات
+├── services.py            # منطق العمل التجاري
+├── forms.py               # التحقق من النماذج
+├── db.py                  # إعداد قاعدة البيانات
+├── utils.py               # دوال مساعدة
+└── templates/
+    ├── layout.html        # القالب الأساسي
+    ├── _partials/         # أجزاء HTMX
+    └── projects/          # صفحات المشاريع
+```
 
-### Environment Variables for Render
-- `FLASK_ENV=production` - Sets Flask to production mode
-- `DATABASE_URL` - Automatically provided by Render PostgreSQL addon
-- `PORT` - Automatically set by Render (usually 10000)
+## 🎯 الاستخدام
 
-## Database
+### 1. إنشاء مشروع جديد
+- اذهب للصفحة الرئيسية
+- اضغط "إضافة مشروع جديد"
+- أدخل كود المشروع والاسم والعملة
 
-- Default: SQLite (`musharaka.db`)
-- To use PostgreSQL, set the `DATABASE_URL` environment variable:
-  ```bash
-  export DATABASE_URL="postgresql://user:password@localhost/musharaka"
-  ```
+### 2. ربط الشركاء
+- اذهب لصفحة المشروع
+- اضغط "ربط شريك"
+- اختر الشريك ونسبة المشاركة
 
-## API Endpoints
+### 3. إدارة المحافظ
+- في صفحة المشروع > تبويب الشركاء
+- استخدم أزرار الإيداع والسحب
+- الرصيد يتحدث فوراً
 
-### Projects
-- `POST /api/projects` - Create project
-- `GET /api/projects` - List projects
+### 4. إدارة المراحل
+- في صفحة المشروع > تبويب المراحل
+- أضف مراحل جديدة
+- تابع التكلفة الفعلية
 
-### Partners
-- `POST /api/partners` - Create partner
-- `POST /api/projects/{project_id}/partners` - Add partner to project
+### 5. توزيع التكاليف
+- في صفحة المراحل
+- اضغط "توزيع بالنسب"
+- التكلفة تُخصم من محافظ الشركاء
 
-### Wallet Management
-- `POST /api/projects/{project_id}/partners/{partner_id}/wallet/deposit` - Deposit funds
-- `POST /api/projects/{project_id}/partners/{partner_id}/wallet/withdraw` - Withdraw funds
+## 🔧 المتغيرات البيئية
 
-### Inventory & Purchases
-- `POST /api/suppliers` - Create supplier
-- `POST /api/items` - Create item
-- `POST /api/projects/{project_id}/warehouses` - Create warehouse
-- `POST /api/purchases/invoices` - Create purchase invoice
-- `POST /api/stock/issue` - Issue stock to stage
+```bash
+DATABASE_URL=sqlite:///musharaka.db  # رابط قاعدة البيانات
+SECRET_KEY=your-secret-key           # مفتاح التشفير
+PORT=5000                           # منفذ التطبيق
+```
 
-### Stages & Expenses
-- `POST /api/projects/{project_id}/stages` - Create stage
-- `POST /api/expenses` - Create expense
-- `GET /api/stages/{stage_id}/cost` - Get stage cost breakdown
-- `POST /api/stages/{stage_id}/allocate` - Allocate stage costs
+## 📊 قاعدة البيانات
 
-### Settlements
-- `POST /api/settlements` - Create settlement batch
-- `POST /api/settlements/{batch_id}/post` - Post settlement
-- `GET /api/settlements/{batch_id}` - Get settlement details
+النظام يستخدم SQLite افتراضياً ويمكن تبديله لـ PostgreSQL:
 
-### Reports
-- `GET /api/reports/partner-statement` - Get partner statement
+```bash
+# PostgreSQL
+DATABASE_URL=postgresql://user:pass@localhost/musharaka
+```
 
-## Business Rules
+## 🎨 التخصيص
 
-1. **Partner Shares**: Must total exactly 100% per project
-2. **Wallet Operations**: Withdrawals require sufficient balance
-3. **Cost Allocation**: Delta-based allocation (total cost - already allocated)
-4. **Settlements**: Greedy matching of debtors to creditors
-5. **Monetary Values**: All amounts stored as Decimal with 2 decimal places
+### الألوان
+يمكن تخصيص الألوان في `templates/layout.html`:
 
-## Example Flow
-
-1. Create project and add partners with shares
-2. Deposit funds to partner wallets
-3. Create suppliers, items, and warehouses
-4. Record purchase invoices (stock-in)
-5. Issue materials to stages (creates expenses)
-6. Record additional stage expenses
-7. Allocate stage costs to partners
-8. Generate settlement batch and post
-
-## Response Format
-
-All API responses follow this format:
-
-**Success:**
-```json
-{
-  "ok": true,
-  "data": { ... }
+```html
+<script>
+tailwind.config = {
+    theme: {
+        extend: {
+            colors: {
+                primary: '#your-color'
+            }
+        }
+    }
 }
+</script>
 ```
 
-**Error:**
-```json
-{
-  "ok": false,
-  "error_code": "ERROR_CODE",
-  "message": "Error description",
-  "details": { ... }
-}
+### الخطوط
+النظام يدعم الخطوط العربية:
+- Cairo
+- Tajawal
+- System fonts
+
+## 🚀 النشر
+
+### Render
+```yaml
+# render.yaml
+services:
+  - type: web
+    name: musharaka-pro
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT app.app:app
 ```
+
+### Heroku
+```bash
+# Procfile
+web: gunicorn --bind 0.0.0.0:$PORT app.app:app
+```
+
+## 📝 التطوير
+
+### إضافة ميزة جديدة
+
+1. أضف النموذج في `models.py`
+2. أضف الخدمة في `services.py`
+3. أضف المسار في `app.py`
+4. أضف القالب في `templates/`
+
+### اختبار التطبيق
+
+```bash
+# تشغيل في وضع التطوير
+python app/app.py
+
+# اختبار APIs
+curl http://localhost:5000/api/projects
+```
+
+## 🤝 المساهمة
+
+1. Fork المشروع
+2. أنشئ branch للميزة الجديدة
+3. Commit التغييرات
+4. Push للـ branch
+5. أنشئ Pull Request
+
+## 📄 الرخصة
+
+هذا المشروع مرخص تحت رخصة MIT.
+
+## 📞 الدعم
+
+للدعم والاستفسارات:
+- GitHub Issues
+- Email: support@musharaka-pro.com
+
+---
+
+**مشاركة برو** - نظام إدارة المشاريع المالية المتقدم 🚀

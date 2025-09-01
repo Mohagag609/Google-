@@ -1,0 +1,25 @@
+<!-- Project row partial for HTMX responses -->
+<tr class="bg-white border-b hover:bg-gray-50">
+    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+        {{ project.code }}
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        {{ project.name }}
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        {{ project.base_currency }}
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap">
+        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ 'bg-green-100 text-green-800' if project.status == 'open' else 'bg-red-100 text-red-800' }}">
+            {{ 'مفتوح' if project.status == 'open' else 'مغلق' }}
+        </span>
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        {{ project.created_at.strftime('%Y-%m-%d') }}
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+        <a href="/projects/{{ project.id }}" class="text-blue-600 hover:text-blue-900">
+            عرض
+        </a>
+    </td>
+</tr>

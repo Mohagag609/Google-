@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Start script for Musharaka Pro
+Run script for Musharaka Pro
 """
 
 import sys
@@ -13,7 +13,4 @@ from app import app
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    print(f"🚀 Starting Musharaka Pro on http://localhost:{port}")
-    print("📱 Open your browser and navigate to the URL above")
-    print("🛑 Press Ctrl+C to stop the server")
     app.run(host='0.0.0.0', port=port, debug=True)
