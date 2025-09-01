@@ -21,6 +21,11 @@ app = Flask(__name__)
 
 # Database configuration
 DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///musharaka.db')
+
+# Handle PostgreSQL URL format for Render
+if DATABASE_URL.startswith('postgres://'):
+    DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
+
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 

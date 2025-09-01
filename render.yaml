@@ -3,7 +3,7 @@ services:
     name: musharaka-pro
     env: python
     plan: free
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install -r requirements-render-fixed.txt
     startCommand: gunicorn app:app
     envVars:
       - key: FLASK_ENV
