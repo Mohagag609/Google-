@@ -1,0 +1,23 @@
+<!-- Stage cost card partial for HTMX responses -->
+<div class="bg-gray-50 p-3 rounded-lg text-xs">
+    <div class="grid grid-cols-2 gap-2">
+        <div>
+            <span class="text-gray-600">التكلفة الإجمالية:</span>
+            <span class="font-semibold">{{ "%.2f"|format(cost_info.total_cost) }}</span>
+        </div>
+        <div>
+            <span class="text-gray-600">المُوزع:</span>
+            <span class="font-semibold">{{ "%.2f"|format(cost_info.allocated) }}</span>
+        </div>
+        <div>
+            <span class="text-gray-600">المتبقي:</span>
+            <span class="font-semibold {{ 'text-red-600' if cost_info.delta > 0 else 'text-green-600' }}">
+                {{ "%.2f"|format(cost_info.delta) }}
+            </span>
+        </div>
+        <div>
+            <span class="text-gray-600">المصروفات المباشرة:</span>
+            <span class="font-semibold">{{ "%.2f"|format(cost_info.direct_expenses) }}</span>
+        </div>
+    </div>
+</div>

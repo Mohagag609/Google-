@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}مشاركة برو - نظام إدارة المشاريع المالية{% endblock %}</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    
+    <!-- Custom Tailwind Config for RTL -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'arabic': ['Cairo', 'Tajawal', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Custom Styles -->
+    <style>
+        body {
+            font-family: 'Cairo', 'Tajawal', system-ui, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .htmx-indicator {
+            opacity: 0;
+            transition: opacity 200ms ease-in;
+        }
+        
+        .htmx-request .htmx-indicator {
+            opacity: 1;
+        }
+        
+        .htmx-request.htmx-indicator {
+            opacity: 1;
+        }
+        
+        /* Enhanced animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .animate-fadeInUp {
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        .animate-slideInRight {
+            animation: slideInRight 0.5s ease-out;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(45deg, #5a6fd8, #6a4190);
+        }
+        
+        .toast-enter-active {
+            transform: translateX(0);
+            opacity: 1;
+            transition: all 300ms ease-out;
+        }
+        
+        .toast-exit {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        
+        .toast-exit-active {
+            transform: translateX(100%);
+            opacity: 0;
+            transition: all 300ms ease-in;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-arabic">
+    <!-- Navigation -->
+    <nav class="bg-blue-600 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/" class="text-white text-xl font-bold">
+                        🚀 مشاركة برو
+                    </a>
+                </div>
+                <div class="flex items-center space-x-4 space-x-reverse">
+                    <a href="/" class="text-white hover:text-blue-200 px-3 py-2 rounded-md text-sm font-medium">
+                        الرئيسية
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Toast Container -->
+    <div id="toasts" class="fixed top-4 right-4 z-50 space-y-2 space-y-reverse">
+        <!-- Toasts will be inserted here -->
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="loading" class="htmx-indicator fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                <span class="text-gray-700">جاري التحميل...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom JavaScript -->
+    <script>
+        // Toast management
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast-enter p-4 rounded-lg shadow-lg max-w-sm ${
+                type === 'success' ? 'bg-green-500 text-white' : 
+                type === 'error' ? 'bg-red-500 text-white' : 
+                'bg-blue-500 text-white'
+            }`;
+            toast.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <span>${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="mr-2 text-white hover:text-gray-200">
+                        ×
+                    </button>
+                </div>
+            `;
+            
+            document.getElementById('toasts').appendChild(toast);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.classList.remove('toast-enter');
+                    toast.classList.add('toast-exit');
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, 5000);
+        }
+
+        // HTMX event listeners
+        document.addEventListener('htmx:afterRequest', function(event) {
+            if (event.detail.xhr.status >= 400) {
+                showToast('حدث خطأ في العملية', 'error');
+            }
+        });
+
+        // Form validation helpers
+        function validateForm(form) {
+            const requiredFields = form.querySelectorAll('[required]');
+            let isValid = true;
+            
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.classList.add('border-red-500');
+                    isValid = false;
+                } else {
+                    field.classList.remove('border-red-500');
+                }
+            });
+            
+            return isValid;
+        }
+
+        // Auto-hide alerts
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.remove(), 300);
+                }, 5000);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+<!-- Toast partial for HTMX responses -->
+<div class="fixed top-4 right-4 z-50 p-4 rounded-xl shadow-2xl max-w-sm transform transition-all duration-500 {{ 'bg-gradient-to-r from-green-500 to-green-600 text-white' if success else 'bg-gradient-to-r from-red-500 to-red-600 text-white' }}">
+    <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <span class="text-xl">{{ '✅' if success else '❌' }}</span>
+            <span class="font-semibold">{{ message }}</span>
+        </div>
+        <button onclick="this.parentElement.parentElement.remove()" class="mr-2 text-white hover:text-gray-200 text-xl font-bold">
+            ×
+        </button>
+    </div>
+</div>

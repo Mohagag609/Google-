@@ -1,0 +1,30 @@
+{
+  "name": "musharaka-pro",
+  "version": "1.0.0",
+  "description": "Project Finance Management System",
+  "scripts": {
+    "start": "python3 app.py",
+    "dev": "FLASK_ENV=development python3 app.py",
+    "test": "python3 test_deployment.py",
+    "health": "python3 healthcheck.py",
+    "setup": "./scripts/setup.sh",
+    "deploy": "./scripts/deploy.sh",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f"
+  },
+  "keywords": [
+    "flask",
+    "python",
+    "finance",
+    "project-management",
+    "partnership",
+    "render"
+  ],
+  "author": "Musharaka Pro Team",
+  "license": "MIT",
+  "engines": {
+    "python": "3.11.0"
+  }
+}
