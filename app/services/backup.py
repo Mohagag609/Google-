@@ -82,7 +82,11 @@ def restore_backup(backup_file):
         db.session.rollback()
         
         # Disable foreign key constraints temporarily
-        db.session.execute('PRAGMA foreign_keys=OFF')
+        if 'sqlite' in str(db.engine.url):
+            db.session.execute('PRAGMA foreign_keys=OFF')
+        else:
+            # PostgreSQL
+            db.session.execute('SET CONSTRAINTS ALL DEFERRED')
         
         # Delete in reverse order to avoid foreign key issues
         models_to_clear = [
@@ -138,7 +142,8 @@ def restore_backup(backup_file):
                     db.session.add(record)
         
         # Re-enable foreign key constraints
-        db.session.execute('PRAGMA foreign_keys=ON')
+        if 'sqlite' in str(db.engine.url):
+            db.session.execute('PRAGMA foreign_keys=ON')
         
         db.session.commit()
         return True
