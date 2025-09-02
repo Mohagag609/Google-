@@ -1,19 +1,35 @@
 """Main Flask application"""
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, make_response
-from .db import init_db, db
-from .models import *
-from .utils import *
-from .services import wallets, allocations, settlements, purchases, stock, reports, backup
 from datetime import datetime, date
 import os
 from decimal import Decimal
 
 # Create Flask app
-app = Flask(__name__)
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
+def create_app():
+    app = Flask(__name__)
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
+    
+    # Initialize database
+    from .db import init_db, db
+    init_db(app)
+    
+    # Import models and services after db init
+    from .models import *
+    from .utils import *
+    from .services import wallets, allocations, settlements, purchases, stock, reports, backup
+    
+    # Make them available globally
+    globals().update(locals())
+    
+    return app
 
-# Initialize database
-init_db(app)
+app = create_app()
+
+# Import everything we need after app creation
+from .db import db
+from .models import *
+from .utils import *
+from .services import wallets, allocations, settlements, purchases, stock, reports, backup
 
 # Template filters
 @app.template_filter('money')
