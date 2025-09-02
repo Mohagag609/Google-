@@ -1,0 +1,137 @@
+{% extends "layout.html" %}
+
+{% block title %}الخزينة - نظام إدارة المقاولات{% endblock %}
+
+{% block content %}
+<div class="container mx-auto">
+    <h1 class="text-3xl font-bold mb-8">إدارة الخزينة</h1>
+    
+    <!-- Treasury Summary -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-2 text-gray-700">إجمالي الأرصدة</h3>
+            <p class="text-3xl font-bold text-blue-600">{{ total_balance|money }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-2 text-gray-700">إجمالي المقبوضات</h3>
+            <p class="text-3xl font-bold text-green-600">{{ total_receipts|money }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-2 text-gray-700">إجمالي المدفوعات</h3>
+            <p class="text-3xl font-bold text-red-600">{{ total_payments|money }}</p>
+        </div>
+    </div>
+    
+    <!-- Create Treasury -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <h2 class="text-xl font-bold mb-4">إضافة خزينة جديدة</h2>
+        <form method="POST" action="/treasury/create" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <select name="project_id" required class="px-4 py-2 border rounded-lg">
+                <option value="">اختر المشروع</option>
+                {% for project in projects %}
+                    <option value="{{ project.id }}">{{ project.name }}</option>
+                {% endfor %}
+            </select>
+            <input type="text" name="name" placeholder="اسم الخزينة" required
+                   class="px-4 py-2 border rounded-lg">
+            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+                إضافة خزينة
+            </button>
+        </form>
+    </div>
+    
+    <!-- Treasuries List -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <h2 class="text-xl font-bold mb-4">الخزائن</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المشروع</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">اسم الخزينة</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الرصيد</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for treasury in treasuries %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ treasury.project.name }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ treasury.name }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap font-bold">{{ treasury.balance|money }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if treasury.is_default %}
+                                <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-700">افتراضية</span>
+                            {% else %}
+                                <span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700">عادية</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <a href="/vouchers?treasury_id={{ treasury.id }}" class="text-blue-600 hover:text-blue-800">
+                                عرض السندات
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Quick Voucher Creation -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Receipt Voucher -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-bold mb-4 text-green-600">سند قبض سريع</h3>
+            <form method="POST" action="/vouchers/receipt" class="space-y-4">
+                <select name="treasury_id" required class="w-full px-4 py-2 border rounded-lg">
+                    <option value="">اختر الخزينة</option>
+                    {% for treasury in treasuries %}
+                        <option value="{{ treasury.id }}">{{ treasury.name }} - {{ treasury.project.name }}</option>
+                    {% endfor %}
+                </select>
+                <select name="party_type" required class="w-full px-4 py-2 border rounded-lg">
+                    <option value="">نوع الطرف</option>
+                    <option value="partner">شريك</option>
+                    <option value="supplier">مورد</option>
+                    <option value="other">أخرى</option>
+                </select>
+                <input type="number" name="amount" step="0.01" placeholder="المبلغ" required
+                       class="w-full px-4 py-2 border rounded-lg">
+                <input type="text" name="notes" placeholder="ملاحظات"
+                       class="w-full px-4 py-2 border rounded-lg">
+                <button type="submit" class="w-full bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700">
+                    إنشاء سند قبض
+                </button>
+            </form>
+        </div>
+        
+        <!-- Payment Voucher -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-bold mb-4 text-red-600">سند صرف سريع</h3>
+            <form method="POST" action="/vouchers/payment" class="space-y-4">
+                <select name="treasury_id" required class="w-full px-4 py-2 border rounded-lg">
+                    <option value="">اختر الخزينة</option>
+                    {% for treasury in treasuries %}
+                        <option value="{{ treasury.id }}">{{ treasury.name }} - {{ treasury.project.name }}</option>
+                    {% endfor %}
+                </select>
+                <select name="party_type" required class="w-full px-4 py-2 border rounded-lg">
+                    <option value="">نوع الطرف</option>
+                    <option value="partner">شريك</option>
+                    <option value="supplier">مورد</option>
+                    <option value="other">أخرى</option>
+                </select>
+                <input type="number" name="amount" step="0.01" placeholder="المبلغ" required
+                       class="w-full px-4 py-2 border rounded-lg">
+                <input type="text" name="notes" placeholder="ملاحظات"
+                       class="w-full px-4 py-2 border rounded-lg">
+                <button type="submit" class="w-full bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700">
+                    إنشاء سند صرف
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

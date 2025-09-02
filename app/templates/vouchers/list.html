@@ -1,0 +1,93 @@
+{% extends "layout.html" %}
+
+{% block title %}السندات - نظام إدارة المقاولات{% endblock %}
+
+{% block content %}
+<div class="container mx-auto">
+    <h1 class="text-3xl font-bold mb-8">سندات القبض والصرف</h1>
+    
+    <!-- Filters -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <form method="GET" action="/vouchers" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <select name="treasury_id" onchange="this.form.submit()" class="px-4 py-2 border rounded-lg">
+                <option value="">جميع الخزائن</option>
+                {% for treasury in treasuries %}
+                    <option value="{{ treasury.id }}" {% if selected_treasury == treasury.id %}selected{% endif %}>
+                        {{ treasury.name }} - {{ treasury.project.name }}
+                    </option>
+                {% endfor %}
+            </select>
+            <select name="type" onchange="this.form.submit()" class="px-4 py-2 border rounded-lg">
+                <option value="">جميع الأنواع</option>
+                <option value="receipt" {% if selected_type == 'receipt' %}selected{% endif %}>سندات القبض</option>
+                <option value="payment" {% if selected_type == 'payment' %}selected{% endif %}>سندات الصرف</option>
+            </select>
+            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+                تصفية
+            </button>
+        </form>
+    </div>
+    
+    <!-- Vouchers Table -->
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <div class="overflow-x-auto">
+            <table class="min-w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">رقم السند</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">التاريخ</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">النوع</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الخزينة</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الطرف</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المبلغ</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">ملاحظات</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for voucher in vouchers %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap font-mono">{{ voucher.ref_code }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ voucher.v_date|date }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if voucher.v_type == 'receipt' %}
+                                <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-700">قبض</span>
+                            {% else %}
+                                <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-700">صرف</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if voucher.treasury %}
+                                {{ voucher.treasury.name }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ voucher.party_type }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap font-bold">
+                            {% if voucher.v_type == 'receipt' %}
+                                <span class="text-green-600">+{{ voucher.amount|money }}</span>
+                            {% else %}
+                                <span class="text-red-600">-{{ voucher.amount|money }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4">{{ voucher.notes or '-' }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <a href="/print/voucher/{{ voucher.id }}" class="text-blue-600 hover:text-blue-800">
+                                طباعة
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if not vouchers %}
+        <div class="text-center py-8 text-gray-500">
+            لا توجد سندات
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

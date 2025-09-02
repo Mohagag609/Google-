@@ -196,11 +196,25 @@ class Expense(db.Model, TimestampMixin):
         db.Index('idx_expense_project_stage', 'project_id', 'stage_id'),
     )
 
+class Treasury(db.Model, TimestampMixin):
+    __tablename__ = 'treasuries'
+    
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    project_id = db.Column(db.String(36), db.ForeignKey('projects.id'), nullable=False)
+    name = db.Column(db.String(200), nullable=False)
+    balance = db.Column(db.Numeric(14, 2), default=Decimal('0'), nullable=False)
+    is_default = db.Column(db.Boolean, default=False, nullable=False)
+    
+    # Relationships
+    project = db.relationship('Project', backref='treasuries')
+    vouchers = db.relationship('Voucher', back_populates='treasury')
+
 class Voucher(db.Model, TimestampMixin):
     __tablename__ = 'vouchers'
     
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     project_id = db.Column(db.String(36), db.ForeignKey('projects.id'), nullable=False)
+    treasury_id = db.Column(db.String(36), db.ForeignKey('treasuries.id'), nullable=True)
     v_type = db.Column(db.String(20), nullable=False)  # 'receipt' or 'payment'
     party_type = db.Column(db.String(20), nullable=False)  # 'partner', 'supplier', 'other'
     party_id = db.Column(db.String(36), nullable=True)
@@ -211,6 +225,7 @@ class Voucher(db.Model, TimestampMixin):
     
     # Relationships
     project = db.relationship('Project', back_populates='vouchers')
+    treasury = db.relationship('Treasury', back_populates='vouchers')
     
     # Indexes
     __table_args__ = (

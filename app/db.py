@@ -27,6 +27,14 @@ def init_db(app):
     if database_url.startswith("postgres://"):
         database_url = database_url.replace("postgres://", "postgresql://", 1)
     
+    # Use SQLite locally if PostgreSQL is not available
+    if 'postgresql' in database_url:
+        try:
+            import psycopg2
+        except ImportError:
+            print("PostgreSQL driver not found, using SQLite instead")
+            database_url = 'sqlite:///musharaka.db'
+    
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     

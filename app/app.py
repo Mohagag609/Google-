@@ -369,6 +369,153 @@ def allocate_custom_route(stage_id):
         stage = Stage.query.get(stage_id)
         return redirect(url_for('project_home', project_id=stage.project_id))
 
+# Treasury and Vouchers
+@app.route('/treasury')
+def treasury_index():
+    """Treasury management page"""
+    treasuries = Treasury.query.all()
+    projects = Project.query.all()
+    
+    # Calculate totals
+    total_balance = db.session.query(db.func.sum(Treasury.balance)).scalar() or Decimal("0")
+    total_receipts = db.session.query(db.func.sum(Voucher.amount)).filter_by(v_type='receipt').scalar() or Decimal("0")
+    total_payments = db.session.query(db.func.sum(Voucher.amount)).filter_by(v_type='payment').scalar() or Decimal("0")
+    
+    return render_template('treasury/index.html',
+                         treasuries=treasuries,
+                         projects=projects,
+                         total_balance=total_balance,
+                         total_receipts=total_receipts,
+                         total_payments=total_payments)
+
+@app.route('/treasury/create', methods=['POST'])
+def create_treasury():
+    """Create new treasury"""
+    try:
+        project_id = request.form.get('project_id')
+        name = request.form.get('name')
+        
+        # Check if it's the first treasury for the project
+        existing = Treasury.query.filter_by(project_id=project_id).count()
+        
+        treasury = Treasury(
+            project_id=project_id,
+            name=name,
+            is_default=(existing == 0)  # First treasury is default
+        )
+        db.session.add(treasury)
+        db.session.commit()
+        
+        flash_success(f"تم إنشاء الخزينة: {name}")
+        return redirect(url_for('treasury_index'))
+    
+    except Exception as e:
+        flash_error(str(e))
+        return redirect(url_for('treasury_index'))
+
+@app.route('/vouchers')
+def vouchers_list():
+    """List vouchers"""
+    treasury_id = request.args.get('treasury_id')
+    v_type = request.args.get('type')
+    
+    query = Voucher.query
+    if treasury_id:
+        query = query.filter_by(treasury_id=treasury_id)
+    if v_type:
+        query = query.filter_by(v_type=v_type)
+    
+    vouchers = query.order_by(Voucher.v_date.desc()).all()
+    treasuries = Treasury.query.all()
+    
+    return render_template('vouchers/list.html',
+                         vouchers=vouchers,
+                         treasuries=treasuries,
+                         selected_treasury=treasury_id,
+                         selected_type=v_type)
+
+@app.route('/vouchers/receipt', methods=['POST'])
+def create_receipt_voucher():
+    """Create receipt voucher"""
+    try:
+        treasury_id = request.form.get('treasury_id')
+        party_type = request.form.get('party_type')
+        party_id = request.form.get('party_id')
+        amount = d(request.form.get('amount'))
+        notes = request.form.get('notes')
+        
+        treasury = Treasury.query.get(treasury_id)
+        if not treasury:
+            raise ValidationError("الخزينة غير موجودة")
+        
+        voucher = Voucher(
+            project_id=treasury.project_id,
+            treasury_id=treasury_id,
+            v_type='receipt',
+            party_type=party_type,
+            party_id=party_id,
+            amount=amount,
+            v_date=date.today(),
+            ref_code=generate_ref_code('RV', treasury.project.code),
+            notes=notes
+        )
+        
+        # Update treasury balance
+        treasury.balance = d(treasury.balance) + amount
+        
+        db.session.add(voucher)
+        db.session.commit()
+        
+        flash_success(f"تم إنشاء سند القبض: {voucher.ref_code}")
+        return redirect(url_for('treasury_index'))
+    
+    except Exception as e:
+        flash_error(str(e))
+        return redirect(url_for('treasury_index'))
+
+@app.route('/vouchers/payment', methods=['POST'])
+def create_payment_voucher():
+    """Create payment voucher"""
+    try:
+        treasury_id = request.form.get('treasury_id')
+        party_type = request.form.get('party_type')
+        party_id = request.form.get('party_id')
+        amount = d(request.form.get('amount'))
+        notes = request.form.get('notes')
+        
+        treasury = Treasury.query.get(treasury_id)
+        if not treasury:
+            raise ValidationError("الخزينة غير موجودة")
+        
+        # Check balance
+        if d(treasury.balance) < amount:
+            raise ValidationError(f"الرصيد غير كافي. المتاح: {d(treasury.balance)}")
+        
+        voucher = Voucher(
+            project_id=treasury.project_id,
+            treasury_id=treasury_id,
+            v_type='payment',
+            party_type=party_type,
+            party_id=party_id,
+            amount=amount,
+            v_date=date.today(),
+            ref_code=generate_ref_code('PV', treasury.project.code),
+            notes=notes
+        )
+        
+        # Update treasury balance
+        treasury.balance = d(treasury.balance) - amount
+        
+        db.session.add(voucher)
+        db.session.commit()
+        
+        flash_success(f"تم إنشاء سند الصرف: {voucher.ref_code}")
+        return redirect(url_for('treasury_index'))
+    
+    except Exception as e:
+        flash_error(str(e))
+        return redirect(url_for('treasury_index'))
+
 # Expenses
 @app.route('/expenses', methods=['POST'])
 def create_expense():
@@ -511,6 +658,35 @@ def create_warehouse(project_id):
         return redirect(url_for('project_home', project_id=project_id))
 
 # Purchases
+@app.route('/purchases/invoices')
+def purchase_invoices_list():
+    """List purchase invoices"""
+    project_id = request.args.get('project_id')
+    supplier_id = request.args.get('supplier_id')
+    
+    query = PurchaseInvoice.query
+    if project_id:
+        query = query.filter_by(project_id=project_id)
+    if supplier_id:
+        query = query.filter_by(supplier_id=supplier_id)
+    
+    invoices = query.order_by(PurchaseInvoice.date.desc()).all()
+    projects = Project.query.all()
+    suppliers = Supplier.query.all()
+    
+    return render_template('purchases/list.html',
+                         invoices=invoices,
+                         projects=projects,
+                         suppliers=suppliers,
+                         selected_project=project_id,
+                         selected_supplier=supplier_id)
+
+@app.route('/purchases/invoices/<invoice_id>')
+def view_purchase_invoice(invoice_id):
+    """View purchase invoice details"""
+    invoice = PurchaseInvoice.query.get_or_404(invoice_id)
+    return render_template('purchases/view.html', invoice=invoice)
+
 @app.route('/purchases/invoices/new')
 def new_purchase_invoice():
     """New purchase invoice form"""
