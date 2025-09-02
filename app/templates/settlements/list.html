@@ -1,0 +1,96 @@
+{% extends "layout.html" %}
+
+{% block title %}التسويات - نظام إدارة المقاولات{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow-lg p-6">
+    <h1 class="text-3xl font-bold mb-6">التسويات بين الشركاء</h1>
+    
+    <!-- Create Settlement Form -->
+    <div class="mb-8 p-4 bg-gray-50 rounded-lg">
+        <h3 class="font-semibold mb-4">إنشاء تسوية جديدة</h3>
+        <form method="POST" action="/settlements" class="flex items-end gap-4">
+            <div class="flex-1">
+                <label class="block text-sm text-gray-600 mb-1">المشروع</label>
+                <select name="project_id" required class="w-full px-4 py-2 border rounded-lg">
+                    <option value="">اختر المشروع</option>
+                    {% for project in projects %}
+                        <option value="{{ project.id }}">{{ project.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm text-gray-600 mb-1">تاريخ القطع</label>
+                <input type="date" name="cutoff_date" value="{{ now().strftime('%Y-%m-%d') }}"
+                       class="px-4 py-2 border rounded-lg" required>
+            </div>
+            <button type="submit" class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700">
+                إنشاء تسوية
+            </button>
+        </form>
+    </div>
+    
+    <!-- Filter -->
+    {% if projects|length > 1 %}
+    <div class="mb-4">
+        <form method="GET" action="/settlements" class="flex gap-4">
+            <select name="project_id" onchange="this.form.submit()" class="px-4 py-2 border rounded-lg">
+                <option value="">جميع المشاريع</option>
+                {% for project in projects %}
+                    <option value="{{ project.id }}" {% if selected_project_id == project.id %}selected{% endif %}>
+                        {{ project.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+    {% endif %}
+    
+    <!-- Settlements List -->
+    <div class="overflow-x-auto">
+        <table class="min-w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المشروع</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">تاريخ القطع</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">إجمالي التكلفة</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">تاريخ الإنشاء</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for batch in batches %}
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ batch.project.name }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ batch.cutoff_date|date }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ batch.total_cost_until_cutoff|money }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs rounded-full 
+                            {% if batch.status == 'open' %}bg-yellow-100 text-yellow-700
+                            {% elif batch.status == 'posted' %}bg-green-100 text-green-700
+                            {% else %}bg-red-100 text-red-700{% endif %}">
+                            {% if batch.status == 'open' %}مفتوح
+                            {% elif batch.status == 'posted' %}مرحل
+                            {% else %}ملغي{% endif %}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">{{ batch.created_at|date }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <a href="/settlements/{{ batch.id }}" class="text-blue-600 hover:text-blue-800">
+                            عرض التفاصيل
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    {% if not batches %}
+    <div class="text-center py-8 text-gray-500">
+        لا توجد تسويات حتى الآن
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

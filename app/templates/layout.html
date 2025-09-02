@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}نظام إدارة المقاولات والشركاء{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <style>
+        [dir="rtl"] .rtl\:text-right { text-align: right; }
+        [dir="rtl"] .rtl\:text-left { text-align: left; }
+        .htmx-indicator { display: none; }
+        .htmx-request .htmx-indicator { display: inline-block; }
+        .htmx-request.htmx-indicator { display: inline-block; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg border-b">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-reverse space-x-8">
+                    <a href="/" class="text-2xl font-bold text-blue-600">نظام المقاولات</a>
+                    <div class="flex space-x-reverse space-x-6">
+                        <a href="/" class="hover:text-blue-600 transition">المشاريع</a>
+                        <a href="/suppliers" class="hover:text-blue-600 transition">الموردين</a>
+                        <a href="/items" class="hover:text-blue-600 transition">المواد</a>
+                        <a href="/purchases/invoices/new" class="hover:text-blue-600 transition">المشتريات</a>
+                        <a href="/stock/issue" class="hover:text-blue-600 transition">صرف مواد</a>
+                        <a href="/settlements" class="hover:text-blue-600 transition">التسويات</a>
+                        <a href="/reports/partner-statement" class="hover:text-blue-600 transition">التقارير</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container mx-auto px-4 mt-4">
+                {% for category, message in messages %}
+                    <div class="p-4 mb-2 rounded-lg {% if category == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Toast Container -->
+    <div id="toasts" class="fixed top-4 left-4 z-50 space-y-2"></div>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-6 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p>نظام إدارة المقاولات والشركاء © 2024</p>
+        </div>
+    </footer>
+
+    <script>
+        // Auto-remove toasts after 5 seconds
+        document.addEventListener('htmx:afterSwap', function(evt) {
+            if (evt.detail.target.id === 'toasts') {
+                setTimeout(() => {
+                    evt.detail.target.lastElementChild?.remove();
+                }, 5000);
+            }
+        });
+        
+        // Handle dynamic selects
+        function updateStages(projectId) {
+            if (!projectId) return;
+            fetch(`/api/projects/${projectId}/stages`)
+                .then(r => r.json())
+                .then(stages => {
+                    const select = document.getElementById('stage_id');
+                    if (select) {
+                        select.innerHTML = '<option value="">اختر المرحلة</option>';
+                        stages.forEach(s => {
+                            select.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+                        });
+                    }
+                });
+        }
+        
+        function updateWarehouses(projectId) {
+            if (!projectId) return;
+            fetch(`/api/projects/${projectId}/warehouses`)
+                .then(r => r.json())
+                .then(warehouses => {
+                    const select = document.getElementById('warehouse_id');
+                    if (select) {
+                        select.innerHTML = '<option value="">اختر المخزن</option>';
+                        warehouses.forEach(w => {
+                            select.innerHTML += `<option value="${w.id}">${w.name}</option>`;
+                        });
+                    }
+                });
+        }
+        
+        function updateItems(warehouseId) {
+            if (!warehouseId) return;
+            fetch(`/api/warehouses/${warehouseId}/items`)
+                .then(r => r.json())
+                .then(items => {
+                    const select = document.getElementById('item_id');
+                    if (select) {
+                        select.innerHTML = '<option value="">اختر الصنف</option>';
+                        items.forEach(i => {
+                            select.innerHTML += `<option value="${i.id}">${i.name}</option>`;
+                        });
+                    }
+                });
+        }
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

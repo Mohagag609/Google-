@@ -1,0 +1,35 @@
+<tr>
+    <td class="px-6 py-4 whitespace-nowrap">{{ pp.partner.name }}</td>
+    <td class="px-6 py-4 whitespace-nowrap">{{ pp.share_pct }}%</td>
+    <td class="px-6 py-4 whitespace-nowrap">
+        <span id="balance-{{ pp.partner_id }}">{{ pp.wallet_balance|money }}</span>
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap">{{ pp.carry_forward_balance|money }}</td>
+    <td class="px-6 py-4 whitespace-nowrap">
+        <div class="flex space-x-reverse space-x-2">
+            <!-- Deposit Form -->
+            <form hx-post="/projects/{{ pp.project_id }}/wallet/{{ pp.partner_id }}/deposit"
+                  hx-target="#balance-{{ pp.partner_id }}"
+                  hx-swap="outerHTML"
+                  class="inline-flex items-center">
+                <input type="number" name="amount" step="0.01" placeholder="المبلغ" required
+                       class="w-24 px-2 py-1 text-sm border rounded">
+                <button type="submit" class="mr-2 bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
+                    إيداع
+                </button>
+            </form>
+            
+            <!-- Withdraw Form -->
+            <form hx-post="/projects/{{ pp.project_id }}/wallet/{{ pp.partner_id }}/withdraw"
+                  hx-target="#balance-{{ pp.partner_id }}"
+                  hx-swap="outerHTML"
+                  class="inline-flex items-center">
+                <input type="number" name="amount" step="0.01" placeholder="المبلغ" required
+                       class="w-24 px-2 py-1 text-sm border rounded">
+                <button type="submit" class="mr-2 bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">
+                    سحب
+                </button>
+            </form>
+        </div>
+    </td>
+</tr>

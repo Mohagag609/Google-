@@ -1,0 +1,44 @@
+<div class="bg-white rounded-lg shadow p-6">
+    <h3 class="text-xl font-bold mb-4">معاينة التسوية</h3>
+    
+    <!-- Summary -->
+    <div class="bg-gray-50 rounded p-4 mb-4">
+        <p class="text-sm text-gray-600">إجمالي التكلفة حتى {{ batch.cutoff_date|date }}:</p>
+        <p class="text-2xl font-bold text-blue-600">{{ batch.total_cost_until_cutoff|money }}</p>
+    </div>
+    
+    <!-- Lines -->
+    <div class="mb-4">
+        <h4 class="font-semibold mb-2">تفاصيل الشركاء:</h4>
+        <div class="space-y-2">
+            {% for line in batch.lines %}
+            <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                <span>{{ line.partner.name }} ({{ line.share_pct_at_cutoff }}%)</span>
+                <span class="{% if line.diff_amount > 0 %}text-green-600{% elif line.diff_amount < 0 %}text-red-600{% else %}text-gray-600{% endif %}">
+                    {{ line.diff_amount|money }}
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Claims -->
+    {% if batch.claims %}
+    <div class="mb-4">
+        <h4 class="font-semibold mb-2">المطالبات:</h4>
+        <div class="space-y-1 text-sm">
+            {% for claim in batch.claims %}
+            <div class="p-2 bg-yellow-50 rounded">
+                {{ claim.from_partner.name }} ← {{ claim.to_partner.name }}: {{ claim.amount|money }}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="mt-4">
+        <a href="/settlements/{{ batch.id }}" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
+            عرض التفاصيل الكاملة
+        </a>
+    </div>
+</div>

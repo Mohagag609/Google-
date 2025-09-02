@@ -1,0 +1,87 @@
+{% extends "layout.html" %}
+
+{% block title %}صرف مواد - نظام إدارة المقاولات{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow-lg p-6 max-w-2xl mx-auto">
+    <h1 class="text-3xl font-bold mb-6">صرف مواد للمراحل</h1>
+    
+    <form method="POST" action="/stock/issue">
+        <div class="space-y-4">
+            <!-- Project Selection -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">المشروع</label>
+                <select name="project_id" id="project_id" required 
+                        onchange="updateStages(this.value); updateWarehouses(this.value)"
+                        class="w-full px-4 py-2 border rounded-lg">
+                    <option value="">اختر المشروع</option>
+                    {% for project in projects %}
+                        <option value="{{ project.id }}">{{ project.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Warehouse Selection -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">المخزن</label>
+                <select name="warehouse_id" id="warehouse_id" required 
+                        onchange="updateItems(this.value)"
+                        class="w-full px-4 py-2 border rounded-lg">
+                    <option value="">اختر المخزن</option>
+                </select>
+            </div>
+            
+            <!-- Stage Selection -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">المرحلة</label>
+                <select name="stage_id" id="stage_id" required 
+                        class="w-full px-4 py-2 border rounded-lg">
+                    <option value="">اختر المرحلة</option>
+                </select>
+            </div>
+            
+            <!-- Item Selection -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">الصنف</label>
+                <select name="item_id" id="item_id" required 
+                        class="w-full px-4 py-2 border rounded-lg">
+                    <option value="">اختر الصنف</option>
+                </select>
+            </div>
+            
+            <!-- Quantity -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">الكمية</label>
+                <input type="number" name="qty" step="0.001" required
+                       class="w-full px-4 py-2 border rounded-lg"
+                       placeholder="أدخل الكمية المطلوب صرفها">
+            </div>
+            
+            <!-- Date -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">التاريخ</label>
+                <input type="date" name="date" value="{{ now().strftime('%Y-%m-%d') }}"
+                       class="w-full px-4 py-2 border rounded-lg">
+            </div>
+        </div>
+        
+        <!-- Submit Button -->
+        <div class="mt-6">
+            <button type="submit" class="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 text-lg">
+                صرف المواد
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Info Box -->
+<div class="mt-8 bg-yellow-50 border border-yellow-200 rounded-lg p-4 max-w-2xl mx-auto">
+    <h3 class="font-semibold text-yellow-800 mb-2">ملاحظات مهمة:</h3>
+    <ul class="text-sm text-yellow-700 space-y-1">
+        <li>• سيتم خصم الكمية من رصيد المخزن</li>
+        <li>• سيتم إنشاء مصروف تلقائي بقيمة المواد المصروفة على المرحلة</li>
+        <li>• القيمة تحسب بناءً على التكلفة القياسية للصنف</li>
+        <li>• تأكد من توفر الكمية المطلوبة في المخزن قبل الصرف</li>
+    </ul>
+</div>
+{% endblock %}
