@@ -1,0 +1,147 @@
+{% extends "layout.html" %}
+
+{% block title %}النسخ الاحتياطي - نظام إدارة المقاولات{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <h1 class="text-3xl font-bold mb-8">إدارة النسخ الاحتياطي</h1>
+    
+    <!-- Database Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-4 text-gray-700">إحصائيات المشاريع</h3>
+            <div class="space-y-2">
+                <div class="flex justify-between">
+                    <span class="text-gray-600">إجمالي المشاريع:</span>
+                    <span class="font-bold">{{ stats.projects.total }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">المشاريع النشطة:</span>
+                    <span class="font-bold text-green-600">{{ stats.projects.active }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">إجمالي الشركاء:</span>
+                    <span class="font-bold">{{ stats.partners.total }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-4 text-gray-700">الإحصائيات المالية</h3>
+            <div class="space-y-2">
+                <div class="flex justify-between">
+                    <span class="text-gray-600">إجمالي المصروفات:</span>
+                    <span class="font-bold">{{ stats.financial.total_expenses|money }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">إجمالي المشتريات:</span>
+                    <span class="font-bold">{{ stats.financial.total_purchases|money }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">أرصدة المحافظ:</span>
+                    <span class="font-bold text-blue-600">{{ stats.financial.total_wallets|money }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-semibold mb-4 text-gray-700">معلومات قاعدة البيانات</h3>
+            <div class="space-y-2">
+                <div class="flex justify-between">
+                    <span class="text-gray-600">حجم قاعدة البيانات:</span>
+                    <span class="font-bold">{{ stats.database.size_mb }} MB</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">عدد الأصناف:</span>
+                    <span class="font-bold">{{ stats.inventory.total_items }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">حركات المخزون:</span>
+                    <span class="font-bold">{{ stats.inventory.total_movements }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Backup Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Create Backup -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-bold mb-4 text-blue-600">إنشاء نسخة احتياطية</h2>
+            
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <p class="text-blue-800">
+                    <strong>ملاحظة:</strong> سيتم إنشاء نسخة احتياطية كاملة من جميع البيانات بما في ذلك:
+                </p>
+                <ul class="mt-2 mr-6 text-sm text-blue-700 list-disc">
+                    <li>جميع المشاريع والشركاء</li>
+                    <li>المعاملات المالية والمحافظ</li>
+                    <li>المخزون والمشتريات</li>
+                    <li>التسويات والتقارير</li>
+                </ul>
+            </div>
+            
+            <form method="POST" action="/backup/create">
+                <button type="submit" class="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition text-lg font-semibold">
+                    <svg class="inline-block w-6 h-6 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>
+                    </svg>
+                    تحميل نسخة احتياطية
+                </button>
+            </form>
+            
+            <div class="mt-4 text-center text-sm text-gray-600">
+                سيتم تحميل ملف ZIP يحتوي على جميع البيانات
+            </div>
+        </div>
+        
+        <!-- Restore Backup -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-bold mb-4 text-orange-600">استعادة نسخة احتياطية</h2>
+            
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <p class="text-red-800">
+                    <strong>تحذير:</strong> استعادة نسخة احتياطية سيؤدي إلى:
+                </p>
+                <ul class="mt-2 mr-6 text-sm text-red-700 list-disc">
+                    <li>حذف جميع البيانات الحالية</li>
+                    <li>استبدالها بالبيانات من النسخة الاحتياطية</li>
+                    <li>هذا الإجراء لا يمكن التراجع عنه</li>
+                </ul>
+            </div>
+            
+            <form method="POST" action="/backup/restore" enctype="multipart/form-data" onsubmit="return confirm('هل أنت متأكد من استعادة النسخة الاحتياطية؟ سيتم حذف جميع البيانات الحالية!')">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">اختر ملف النسخة الاحتياطية (ZIP)</label>
+                    <input type="file" name="backup_file" accept=".zip" required
+                           class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500">
+                </div>
+                
+                <button type="submit" class="w-full bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 transition text-lg font-semibold">
+                    <svg class="inline-block w-6 h-6 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                    استعادة النسخة الاحتياطية
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Backup Tips -->
+    <div class="mt-8 bg-gray-50 rounded-lg p-6">
+        <h3 class="text-lg font-semibold mb-3">نصائح مهمة للنسخ الاحتياطي</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
+            <div>
+                <p>✓ قم بإنشاء نسخ احتياطية بشكل دوري (يومياً أو أسبوعياً)</p>
+                <p>✓ احتفظ بنسخ متعددة في أماكن مختلفة</p>
+                <p>✓ اختبر استعادة النسخ الاحتياطية بشكل دوري</p>
+            </div>
+            <div>
+                <p>✓ احفظ النسخ في مكان آمن (Google Drive, Dropbox)</p>
+                <p>✓ قم بتسمية الملفات بالتاريخ للتنظيم</p>
+                <p>✓ احتفظ بنسخة احتياطية قبل أي تحديث كبير</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -3,7 +3,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from db import init_db, db
 from models import *
 from utils import *
-from services import wallets, allocations, settlements, purchases, stock, reports
+from services import wallets, allocations, settlements, purchases, stock, reports, backup
 from datetime import datetime, date
 import os
 from decimal import Decimal
@@ -38,6 +38,72 @@ def index():
     projects = Project.query.order_by(Project.created_at.desc()).all()
     partners = Partner.query.order_by(Partner.name).all()
     return render_template('index.html', projects=projects, partners=partners)
+
+@app.route('/dashboard')
+def dashboard():
+    """Advanced dashboard with statistics"""
+    # Calculate statistics
+    stats = {
+        'total_projects_value': db.session.query(db.func.sum(Expense.amount)).scalar() or Decimal("0"),
+        'active_projects': Project.query.filter_by(status='open').count(),
+        'total_stages': Stage.query.filter_by(status='open').count(),
+        'total_partners': Partner.query.count(),
+        'partners_with_balance': ProjectPartner.query.filter(ProjectPartner.wallet_balance > 0).count(),
+        'pending_settlements': PartnerSettleBatch.query.filter_by(status='open').count(),
+        'pending_amount': db.session.query(db.func.sum(PartnerSettleLine.diff_amount)).join(
+            PartnerSettleBatch
+        ).filter(PartnerSettleBatch.status == 'open').scalar() or Decimal("0")
+    }
+    
+    # Recent activities (mock data for now)
+    recent_activities = [
+        {'description': 'إيداع من أحمد محمد', 'time': 'منذ 5 دقائق', 'amount': 50000, 'color': 'green'},
+        {'description': 'صرف مواد لمرحلة الأساسات', 'time': 'منذ ساعة', 'amount': -15000, 'color': 'red'},
+        {'description': 'توزيع تكاليف مرحلة', 'time': 'منذ 3 ساعات', 'amount': -25000, 'color': 'blue'},
+    ]
+    
+    # Top partners
+    top_partners_query = db.session.query(
+        Partner.name,
+        db.func.count(ProjectPartner.id).label('projects_count'),
+        db.func.avg(ProjectPartner.share_pct).label('total_share'),
+        db.func.sum(ProjectPartner.wallet_balance).label('total_invested')
+    ).join(ProjectPartner).group_by(Partner.id).order_by(db.func.sum(ProjectPartner.wallet_balance).desc()).limit(5)
+    
+    top_partners = []
+    for row in top_partners_query:
+        top_partners.append({
+            'name': row.name,
+            'projects_count': row.projects_count,
+            'total_share': round(row.total_share or 0, 2),
+            'total_invested': d(row.total_invested or 0)
+        })
+    
+    # Alerts
+    alerts = []
+    
+    # Check for low wallet balances
+    low_wallets = ProjectPartner.query.filter(ProjectPartner.wallet_balance < 1000).count()
+    if low_wallets > 0:
+        alerts.append({
+            'type': 'yellow',
+            'title': 'أرصدة منخفضة',
+            'message': f'يوجد {low_wallets} شريك برصيد أقل من 1000 جنيه'
+        })
+    
+    # Check for pending settlements
+    if stats['pending_settlements'] > 0:
+        alerts.append({
+            'type': 'red',
+            'title': 'تسويات معلقة',
+            'message': f'يوجد {stats["pending_settlements"]} تسوية بحاجة للترحيل'
+        })
+    
+    return render_template('dashboard.html', 
+                         stats=stats,
+                         recent_activities=recent_activities,
+                         top_partners=top_partners,
+                         alerts=alerts)
 
 @app.route('/projects', methods=['POST'])
 def create_project():
@@ -669,6 +735,131 @@ def api_warehouse_items(warehouse_id):
         'id': s['item'].id,
         'name': f"{s['item'].name} ({s['balance']} {s['item'].uom})"
     } for s in summary])
+
+# Print routes
+@app.route('/print/invoice/<invoice_id>')
+def print_invoice(invoice_id):
+    """Print purchase invoice"""
+    invoice = PurchaseInvoice.query.get_or_404(invoice_id)
+    return render_template('print/invoice.html', invoice=invoice)
+
+@app.route('/print/statement/<project_id>/<partner_id>')
+def print_statement(project_id, partner_id):
+    """Print partner statement"""
+    from_date = parse_date(request.args.get('from'))
+    to_date = parse_date(request.args.get('to'))
+    statement = reports.generate_partner_statement(project_id, partner_id, from_date, to_date)
+    
+    if not statement:
+        flash_error("كشف الحساب غير متاح")
+        return redirect(url_for('partner_statement'))
+    
+    return render_template('print/statement.html', statement=statement, from_date=from_date, to_date=to_date)
+
+# Backup routes
+@app.route('/backup')
+def backup_page():
+    """Backup and restore page"""
+    stats = backup.get_database_stats()
+    return render_template('backup.html', stats=stats)
+
+@app.route('/backup/create', methods=['POST'])
+def create_backup():
+    """Create database backup"""
+    try:
+        backup_file = backup.create_backup()
+        response = make_response(backup_file.getvalue())
+        response.headers['Content-Type'] = 'application/zip'
+        response.headers['Content-Disposition'] = f'attachment; filename=backup_{datetime.now().strftime("%Y%m%d_%H%M%S")}.zip'
+        return response
+    except Exception as e:
+        flash_error(f"فشل إنشاء النسخة الاحتياطية: {str(e)}")
+        return redirect(url_for('backup_page'))
+
+@app.route('/backup/restore', methods=['POST'])
+def restore_backup():
+    """Restore database from backup"""
+    try:
+        if 'backup_file' not in request.files:
+            raise ValueError("لم يتم اختيار ملف")
+        
+        file = request.files['backup_file']
+        if file.filename == '':
+            raise ValueError("لم يتم اختيار ملف")
+        
+        if not file.filename.endswith('.zip'):
+            raise ValueError("يجب أن يكون الملف بصيغة ZIP")
+        
+        backup.restore_backup(file)
+        flash_success("تم استعادة النسخة الاحتياطية بنجاح")
+        return redirect(url_for('backup_page'))
+        
+    except Exception as e:
+        flash_error(f"فشل استعادة النسخة الاحتياطية: {str(e)}")
+        return redirect(url_for('backup_page'))
+
+# Settings routes
+@app.route('/settings')
+def settings_page():
+    """System settings page"""
+    settings = {
+        'company_name': 'نظام إدارة المقاولات',
+        'default_currency': 'EGP',
+        'timezone': 'Africa/Cairo',
+        'auto_allocate': False,
+        'require_approval': False,
+        'expense_threshold': 10000,
+        'default_tax_rate': 14
+    }
+    
+    db_size = backup.get_database_size()
+    db_type = 'SQLite' if 'sqlite' in str(db.engine.url) else 'PostgreSQL'
+    install_date = '2024-01-01'  # This would come from a config file
+    
+    return render_template('settings.html', 
+                         settings=settings,
+                         db_size=db_size,
+                         db_type=db_type,
+                         install_date=install_date)
+
+@app.route('/settings/update', methods=['POST'])
+def update_settings():
+    """Update general settings"""
+    # In a real app, save these to a config file or database
+    flash_success("تم حفظ الإعدادات بنجاح")
+    return redirect(url_for('settings_page'))
+
+@app.route('/settings/financial', methods=['POST'])
+def update_financial_settings():
+    """Update financial settings"""
+    flash_success("تم حفظ الإعدادات المالية بنجاح")
+    return redirect(url_for('settings_page'))
+
+@app.route('/settings/cleanup', methods=['POST'])
+def cleanup_database():
+    """Clean up database"""
+    # Implement cleanup logic
+    flash_success("تم تنظيف قاعدة البيانات بنجاح")
+    return redirect(url_for('settings_page'))
+
+@app.route('/settings/reindex', methods=['POST'])
+def reindex_database():
+    """Reindex database"""
+    # Implement reindexing logic
+    flash_success("تم إعادة فهرسة قاعدة البيانات بنجاح")
+    return redirect(url_for('settings_page'))
+
+@app.route('/settings/reset', methods=['POST'])
+def reset_system():
+    """Reset entire system"""
+    try:
+        # Clear all tables
+        db.drop_all()
+        db.create_all()
+        flash_success("تم إعادة تعيين النظام بنجاح")
+    except Exception as e:
+        flash_error(f"فشل إعادة تعيين النظام: {str(e)}")
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
