@@ -1,0 +1,59 @@
+{% extends "layout.html" %}
+
+{% block title %}المواد - نظام إدارة المقاولات{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow-lg p-6">
+    <h1 class="text-3xl font-bold mb-6">المواد والأصناف</h1>
+    
+    <!-- Add Item Form -->
+    <form method="POST" action="/items" class="mb-8 p-4 bg-gray-50 rounded-lg">
+        <h3 class="font-semibold mb-4">إضافة صنف جديد</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <input type="text" name="sku" placeholder="كود الصنف" required
+                   class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <input type="text" name="name" placeholder="اسم الصنف" required
+                   class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <select name="uom" class="px-4 py-2 border rounded-lg">
+                <option value="unit">قطعة</option>
+                <option value="m3">متر مكعب</option>
+                <option value="ton">طن</option>
+                <option value="kg">كيلوجرام</option>
+                <option value="m">متر</option>
+                <option value="m2">متر مربع</option>
+            </select>
+            <input type="number" name="std_cost" step="0.01" placeholder="التكلفة القياسية" required
+                   class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+                إضافة صنف
+            </button>
+        </div>
+    </form>
+    
+    <!-- Items List -->
+    <div class="overflow-x-auto">
+        <table class="min-w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الكود</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الوحدة</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">التكلفة القياسية</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">تاريخ الإضافة</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for item in items %}
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap font-mono">{{ item.sku }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ item.name }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ item.uom }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ item.std_cost|money }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">{{ item.created_at|date }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,199 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ stage.name }} - نظام إدارة المقاولات{% endblock %}
+
+{% block content %}
+<div class="container mx-auto">
+    <!-- Stage Header -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <div class="flex justify-between items-start">
+            <div>
+                <h1 class="text-3xl font-bold mb-2">{{ stage.name }}</h1>
+                <p class="text-gray-600">المشروع: {{ stage.project.name }}</p>
+            </div>
+            <span class="px-4 py-2 text-sm rounded-full {% if stage.status == 'open' %}bg-green-100 text-green-700{% else %}bg-gray-100 text-gray-700{% endif %}">
+                {{ 'مرحلة مفتوحة' if stage.status == 'open' else 'مرحلة مغلقة' }}
+            </span>
+        </div>
+        
+        <!-- Stage Metrics -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t">
+            <div>
+                <p class="text-sm text-gray-500">الموازنة</p>
+                <p class="text-xl font-bold text-blue-600">{{ stage.budget|money }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500">المصروفات</p>
+                <p class="text-xl font-bold text-red-600">{{ stage.total_expenses|money }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500">المتبقي</p>
+                <p class="text-xl font-bold {% if stage.budget - stage.total_expenses >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                    {{ (stage.budget - stage.total_expenses)|money }}
+                </p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500">نسبة الإنجاز</p>
+                <p class="text-xl font-bold">
+                    {% if stage.budget > 0 %}
+                        {{ ((stage.total_expenses / stage.budget * 100)|round(1)) }}%
+                    {% else %}
+                        0%
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        
+        <!-- Subcontractor Info -->
+        {% if stage.subcontractor_name %}
+        <div class="mt-6 pt-6 border-t bg-yellow-50 rounded-lg p-4">
+            <h3 class="font-semibold mb-3">مقاول الباطن</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <p class="text-sm text-gray-600">الاسم</p>
+                    <p class="font-semibold">{{ stage.subcontractor_name }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">النسبة</p>
+                    <p class="font-semibold">{{ stage.subcontractor_percentage }}%</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">المبلغ</p>
+                    <p class="font-semibold">{{ stage.subcontractor_amount|money }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- Add Expense -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-bold mb-4">إضافة مصروف</h3>
+            <form method="POST" action="/expenses" class="space-y-3">
+                <input type="hidden" name="project_id" value="{{ stage.project_id }}">
+                <input type="hidden" name="stage_id" value="{{ stage.id }}">
+                <input type="number" name="amount" step="0.01" placeholder="المبلغ" required
+                       class="w-full px-4 py-2 border rounded-lg">
+                <input type="text" name="description" placeholder="الوصف"
+                       class="w-full px-4 py-2 border rounded-lg">
+                <input type="date" name="date" value="{{ now().strftime('%Y-%m-%d') }}"
+                       class="w-full px-4 py-2 border rounded-lg">
+                <button type="submit" class="w-full bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+                    إضافة مصروف
+                </button>
+            </form>
+        </div>
+        
+        <!-- Allocate Costs -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-bold mb-4">توزيع التكاليف</h3>
+            <div class="space-y-3">
+                <div class="text-center py-4">
+                    <p class="text-2xl font-bold text-purple-600">
+                        {{ (stage.total_expenses - (allocations|sum(attribute='total_amount')))|money }}
+                    </p>
+                    <p class="text-sm text-gray-600">غير موزع</p>
+                </div>
+                {% if stage.total_expenses - (allocations|sum(attribute='total_amount')) > 0 %}
+                <form method="POST" action="/stages/{{ stage.id }}/allocate/by_share">
+                    <button type="submit" class="w-full bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700">
+                        توزيع حسب الحصص
+                    </button>
+                </form>
+                {% else %}
+                <div class="text-center text-green-600">
+                    ✓ جميع التكاليف موزعة
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Issue Materials -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-bold mb-4">صرف مواد</h3>
+            <div class="text-center py-8">
+                <a href="/stock/issue?project_id={{ stage.project_id }}&stage_id={{ stage.id }}" 
+                   class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700">
+                    صرف مواد للمرحلة
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Expenses Table -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <h2 class="text-xl font-bold mb-4">المصروفات</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">التاريخ</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الوصف</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المبلغ</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">النوع</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for expense in expenses %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ expense.date|date }}</td>
+                        <td class="px-6 py-4">{{ expense.description or '-' }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap font-bold text-red-600">{{ expense.amount|money }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ expense.payee_type }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if not expenses %}
+        <div class="text-center py-8 text-gray-500">
+            لا توجد مصروفات
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Allocations Table -->
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <h2 class="text-xl font-bold mb-4">التوزيعات</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">التاريخ</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">النوع</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المبلغ الموزع</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for allocation in allocations %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ allocation.alloc_date|date }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {{ 'حسب الحصص' if allocation.rule == 'by_share' else 'مخصص' }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap font-bold">{{ allocation.total_amount|money }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if allocation.posted %}
+                                <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-700">مرحل</span>
+                            {% else %}
+                                <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700">معلق</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if not allocations %}
+        <div class="text-center py-8 text-gray-500">
+            لا توجد توزيعات
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,155 @@
+{% extends "layout.html" %}
+
+{% block title %}كشف حساب الشريك - نظام إدارة المقاولات{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow-lg p-6">
+    <h1 class="text-3xl font-bold mb-6">كشف حساب الشريك</h1>
+    
+    {% if not statement %}
+    <!-- Search Form -->
+    <form method="GET" action="/reports/partner-statement" class="mb-8 p-4 bg-gray-50 rounded-lg">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">المشروع</label>
+                <select name="project_id" required class="w-full px-4 py-2 border rounded-lg">
+                    <option value="">اختر المشروع</option>
+                    {% for project in projects %}
+                        <option value="{{ project.id }}">{{ project.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">الشريك</label>
+                <select name="partner_id" required class="w-full px-4 py-2 border rounded-lg">
+                    <option value="">اختر الشريك</option>
+                    {% for partner in partners %}
+                        <option value="{{ partner.id }}">{{ partner.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">من تاريخ</label>
+                <input type="date" name="from" class="w-full px-4 py-2 border rounded-lg">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">إلى تاريخ</label>
+                <input type="date" name="to" class="w-full px-4 py-2 border rounded-lg">
+            </div>
+        </div>
+        
+        <button type="submit" class="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+            عرض الكشف
+        </button>
+    </form>
+    
+    {% else %}
+    <!-- Statement Header -->
+    <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+                <p class="text-sm text-gray-600">المشروع</p>
+                <p class="font-semibold">{{ statement.project.name }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600">الشريك</p>
+                <p class="font-semibold">{{ statement.partner.name }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600">الفترة</p>
+                <p class="font-semibold">
+                    {% if from_date %}{{ from_date|date }}{% else %}البداية{% endif %} - 
+                    {% if to_date %}{{ to_date|date }}{% else %}النهاية{% endif %}
+                </p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600">التاريخ</p>
+                <p class="font-semibold">{{ now().strftime('%Y-%m-%d') }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Statement Table -->
+    <div class="overflow-x-auto mb-6">
+        <table class="min-w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">التاريخ</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">النوع</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الوصف</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">مدين</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">دائن</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الرصيد</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for movement in statement.movements %}
+                <tr {% if not movement.date %}class="bg-gray-50 font-semibold"{% endif %}>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {% if movement.date %}{{ movement.date|date }}{% else %}-{% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ movement.type }}</td>
+                    <td class="px-6 py-4">{{ movement.description }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {% if movement.debit > 0 %}{{ movement.debit|money }}{% else %}-{% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {% if movement.credit > 0 %}{{ movement.credit|money }}{% else %}-{% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap font-semibold">
+                        <span class="{% if movement.balance > 0 %}text-green-600{% elif movement.balance < 0 %}text-red-600{% endif %}">
+                            {{ movement.balance|money }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Summary -->
+    <div class="bg-gray-50 rounded-lg p-4">
+        <h3 class="font-semibold mb-3">الملخص</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <p class="text-sm text-gray-600">الرصيد النهائي</p>
+                <p class="text-xl font-bold {% if statement.final_balance > 0 %}text-green-600{% elif statement.final_balance < 0 %}text-red-600{% endif %}">
+                    {{ statement.final_balance|money }}
+                </p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600">رصيد المحفظة الحالي</p>
+                <p class="text-xl font-bold">{{ statement.wallet_balance|money }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600">الرصيد المرحل</p>
+                <p class="text-xl font-bold">{{ statement.carry_forward|money }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Export Actions -->
+    <div class="mt-6 flex gap-4">
+        <a href="{{ request.url }}" class="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700">
+            تحديث
+        </a>
+        <button onclick="exportCSV()" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700">
+            تصدير CSV
+        </button>
+        <button onclick="window.print()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+            طباعة
+        </button>
+    </div>
+    
+    <script>
+    function exportCSV() {
+        const url = new URL(window.location.href);
+        window.location.href = url.toString().replace(/\?/, '?export=csv&');
+    }
+    </script>
+    {% endif %}
+</div>
+{% endblock %}

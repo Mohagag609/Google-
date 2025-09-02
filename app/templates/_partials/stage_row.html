@@ -1,0 +1,21 @@
+<div class="bg-white rounded-lg shadow p-6 mb-4">
+    <div class="flex justify-between items-start mb-4">
+        <div>
+            <h3 class="text-xl font-semibold">{{ stage.name }}</h3>
+            <p class="text-gray-500">الموازنة: {{ stage.budget|money }}</p>
+        </div>
+        <span class="px-3 py-1 text-sm rounded-full {% if stage.status == 'open' %}bg-green-100 text-green-700{% else %}bg-gray-100 text-gray-700{% endif %}">
+            {{ 'مفتوح' if stage.status == 'open' else 'مغلق' }}
+        </span>
+    </div>
+    
+    <!-- Cost Card Container -->
+    <div hx-get="/stages/{{ stage.id }}/cost"
+         hx-trigger="load"
+         hx-target="this"
+         class="mt-4">
+        <div class="text-center py-4">
+            <span class="htmx-indicator">جاري التحميل...</span>
+        </div>
+    </div>
+</div>

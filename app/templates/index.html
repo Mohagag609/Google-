@@ -1,0 +1,78 @@
+{% extends "layout.html" %}
+
+{% block title %}الرئيسية - نظام إدارة المقاولات{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Projects Section -->
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <h2 class="text-2xl font-bold mb-6 text-gray-800">المشاريع</h2>
+        
+        <!-- Create Project Form -->
+        <form hx-post="/projects" hx-target="#projects-list" hx-swap="beforeend" class="mb-6 p-4 bg-gray-50 rounded-lg">
+            <h3 class="font-semibold mb-4">إضافة مشروع جديد</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <input type="text" name="code" placeholder="كود المشروع" required
+                       class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="text" name="name" placeholder="اسم المشروع" required
+                       class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <button type="submit" class="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                إضافة مشروع
+            </button>
+        </form>
+        
+        <!-- Projects List -->
+        <div id="projects-list" class="space-y-3">
+            {% for project in projects %}
+                {% include "_partials/project_row.html" %}
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Partners Section -->
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <h2 class="text-2xl font-bold mb-6 text-gray-800">الشركاء</h2>
+        
+        <!-- Create Partner Form -->
+        <form hx-post="/partners" hx-target="#partners-list" hx-swap="beforeend" class="mb-6 p-4 bg-gray-50 rounded-lg">
+            <h3 class="font-semibold mb-4">إضافة شريك جديد</h3>
+            <input type="text" name="name" placeholder="اسم الشريك" required
+                   class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button type="submit" class="mt-4 bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition">
+                إضافة شريك
+            </button>
+        </form>
+        
+        <!-- Partners List -->
+        <div id="partners-list" class="space-y-2">
+            {% for partner in partners %}
+                <div class="p-3 bg-gray-50 rounded-lg flex justify-between items-center">
+                    <span class="font-medium">{{ partner.name }}</span>
+                    <span class="text-sm text-gray-500">{{ partner.created_at|date }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="mt-8 grid grid-cols-1 md:grid-cols-4 gap-6">
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-gray-500 text-sm">إجمالي المشاريع</h3>
+        <p class="text-3xl font-bold text-blue-600 mt-2">{{ projects|length }}</p>
+    </div>
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-gray-500 text-sm">إجمالي الشركاء</h3>
+        <p class="text-3xl font-bold text-green-600 mt-2">{{ partners|length }}</p>
+    </div>
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-gray-500 text-sm">المشاريع النشطة</h3>
+        <p class="text-3xl font-bold text-purple-600 mt-2">{{ projects|selectattr('status', 'equalto', 'open')|list|length }}</p>
+    </div>
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-gray-500 text-sm">التاريخ</h3>
+        <p class="text-xl font-bold text-gray-600 mt-2">{{ now().strftime('%Y-%m-%d') }}</p>
+    </div>
+</div>
+{% endblock %}

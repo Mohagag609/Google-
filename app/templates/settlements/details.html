@@ -1,0 +1,160 @@
+{% extends "layout.html" %}
+
+{% block title %}تفاصيل التسوية - نظام إدارة المقاولات{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+    <div class="flex justify-between items-start mb-6">
+        <div>
+            <h1 class="text-3xl font-bold mb-2">تفاصيل التسوية</h1>
+            <p class="text-gray-600">المشروع: {{ batch.project.name }}</p>
+            <p class="text-gray-600">تاريخ القطع: {{ batch.cutoff_date|date }}</p>
+        </div>
+        <div class="text-left">
+            <span class="px-4 py-2 text-sm rounded-full 
+                {% if batch.status == 'open' %}bg-yellow-100 text-yellow-700
+                {% elif batch.status == 'posted' %}bg-green-100 text-green-700
+                {% else %}bg-red-100 text-red-700{% endif %}">
+                {% if batch.status == 'open' %}مفتوح - غير مرحل
+                {% elif batch.status == 'posted' %}تم الترحيل
+                {% else %}ملغي{% endif %}
+            </span>
+            {% if batch.posted_at %}
+                <p class="text-sm text-gray-500 mt-2">تاريخ الترحيل: {{ batch.posted_at.strftime('%Y-%m-%d %H:%M') }}</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Summary -->
+    <div class="bg-gray-50 rounded-lg p-4 mb-6">
+        <h3 class="font-semibold mb-3">ملخص التسوية</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <p class="text-sm text-gray-600">إجمالي تكلفة المشروع حتى تاريخ القطع</p>
+                <p class="text-xl font-bold text-blue-600">{{ batch.total_cost_until_cutoff|money }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600">عدد الشركاء</p>
+                <p class="text-xl font-bold">{{ batch.lines|length }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600">عدد المطالبات</p>
+                <p class="text-xl font-bold">{{ batch.claims|length }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Settlement Lines -->
+<div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+    <h2 class="text-2xl font-bold mb-6">تفاصيل الشركاء</h2>
+    
+    <div class="overflow-x-auto">
+        <table class="min-w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الشريك</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">النسبة</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">يجب أن يتحمل</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">دفع فعلياً</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الفرق</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for line in batch.lines %}
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap font-medium">{{ line.partner.name }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ line.share_pct_at_cutoff }}%</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ line.should_bear_amount|money }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ line.actually_paid_amount|money }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="font-semibold {% if line.diff_amount > 0 %}text-green-600{% elif line.diff_amount < 0 %}text-red-600{% else %}text-gray-600{% endif %}">
+                            {{ line.diff_amount|money }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {% if line.diff_amount > 0 %}
+                            <span class="text-green-600">دائن</span>
+                        {% elif line.diff_amount < 0 %}
+                            <span class="text-red-600">مدين</span>
+                        {% else %}
+                            <span class="text-gray-600">متوازن</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Claims -->
+{% if batch.claims %}
+<div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+    <h2 class="text-2xl font-bold mb-6">المطالبات بين الشركاء</h2>
+    
+    <div class="overflow-x-auto">
+        <table class="min-w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">من (المدين)</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">إلى (الدائن)</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المبلغ</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for claim in batch.claims %}
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ claim.from_partner.name }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ claim.to_partner.name }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap font-semibold">{{ claim.amount|money }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs rounded-full 
+                            {% if claim.status == 'pending' %}bg-yellow-100 text-yellow-700
+                            {% elif claim.status == 'settled' %}bg-green-100 text-green-700
+                            {% else %}bg-gray-100 text-gray-700{% endif %}">
+                            {% if claim.status == 'pending' %}معلق
+                            {% elif claim.status == 'settled' %}تم التسوية
+                            {% else %}ملغي{% endif %}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Actions -->
+{% if batch.status == 'open' %}
+<div class="bg-white rounded-lg shadow-lg p-6">
+    <h3 class="text-lg font-semibold mb-4">الإجراءات</h3>
+    
+    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+        <p class="text-yellow-800">
+            <strong>تنبيه:</strong> ترحيل التسوية سيؤدي إلى تحديث الأرصدة المرحلة للشركاء.
+            هذا الإجراء لا يمكن التراجع عنه بسهولة.
+        </p>
+    </div>
+    
+    <form hx-post="/settlements/{{ batch.id }}/post" 
+          hx-target="#toasts" 
+          hx-swap="beforeend"
+          hx-confirm="هل أنت متأكد من ترحيل هذه التسوية؟">
+        <button type="submit" class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 text-lg">
+            ترحيل التسوية
+        </button>
+    </form>
+</div>
+{% endif %}
+
+{% if batch.notes %}
+<div class="bg-white rounded-lg shadow-lg p-6 mt-8">
+    <h3 class="text-lg font-semibold mb-2">ملاحظات</h3>
+    <p class="text-gray-700">{{ batch.notes }}</p>
+</div>
+{% endif %}
+{% endblock %}

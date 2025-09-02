@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+
+{% block title %}الموردين - نظام إدارة المقاولات{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow-lg p-6">
+    <h1 class="text-3xl font-bold mb-6">الموردين</h1>
+    
+    <!-- Add Supplier Form -->
+    <form method="POST" action="/suppliers" class="mb-8 p-4 bg-gray-50 rounded-lg">
+        <h3 class="font-semibold mb-4">إضافة مورد جديد</h3>
+        <div class="flex gap-4">
+            <input type="text" name="name" placeholder="اسم المورد" required
+                   class="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+                إضافة مورد
+            </button>
+        </div>
+    </form>
+    
+    <!-- Suppliers List -->
+    <div class="overflow-x-auto">
+        <table class="min-w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">اسم المورد</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">تاريخ الإضافة</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for supplier in suppliers %}
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ supplier.name }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">{{ supplier.created_at|date }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,15 @@
+<div class="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+    <a href="/projects/{{ project.id }}" class="block">
+        <div class="flex justify-between items-center">
+            <div>
+                <h4 class="font-semibold text-lg">{{ project.name }}</h4>
+                <span class="text-sm text-gray-500">كود: {{ project.code }}</span>
+            </div>
+            <div class="text-left">
+                <span class="px-3 py-1 text-xs rounded-full {% if project.status == 'open' %}bg-green-100 text-green-700{% else %}bg-gray-100 text-gray-700{% endif %}">
+                    {{ 'نشط' if project.status == 'open' else 'مغلق' }}
+                </span>
+            </div>
+        </div>
+    </a>
+</div>

@@ -1,0 +1,105 @@
+{% extends "layout.html" %}
+
+{% block title %}إضافة مرحلة جديدة - نظام إدارة المقاولات{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <h1 class="text-3xl font-bold mb-8">إضافة مرحلة جديدة</h1>
+    
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <form method="POST" action="/stages/create">
+            <!-- Project Selection -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">المشروع *</label>
+                <select name="project_id" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">اختر المشروع</option>
+                    {% for project in projects %}
+                        <option value="{{ project.id }}">{{ project.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Stage Name -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">اسم المرحلة *</label>
+                <input type="text" name="name" required 
+                       placeholder="مثال: أعمال الحفر والأساسات"
+                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <!-- Budget -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">الموازنة التقديرية</label>
+                <input type="number" name="budget" step="0.01" 
+                       placeholder="0.00"
+                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <!-- Subcontractor Section -->
+            <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+                <h3 class="font-semibold mb-4">مقاول الباطن (اختياري)</h3>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">اسم مقاول الباطن</label>
+                    <input type="text" name="subcontractor_name" 
+                           placeholder="اسم المقاول أو الشركة"
+                           class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">نسبة مقاول الباطن %</label>
+                        <input type="number" name="subcontractor_percentage" step="0.01" min="0" max="100"
+                               placeholder="0.00"
+                               onchange="calculateSubcontractorAmount()"
+                               id="subcontractor_percentage"
+                               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">مبلغ مقاول الباطن</label>
+                        <input type="number" name="subcontractor_amount" step="0.01" 
+                               placeholder="0.00"
+                               id="subcontractor_amount"
+                               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                
+                <p class="text-sm text-gray-600 mt-2">
+                    * يمكنك إدخال النسبة أو المبلغ المباشر لمقاول الباطن
+                </p>
+            </div>
+            
+            <!-- Status -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">الحالة</label>
+                <select name="status" class="w-full px-4 py-2 border rounded-lg">
+                    <option value="open">مفتوح</option>
+                    <option value="closed">مغلق</option>
+                </select>
+            </div>
+            
+            <!-- Buttons -->
+            <div class="flex gap-4">
+                <button type="submit" class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">
+                    إضافة المرحلة
+                </button>
+                <a href="/stages" class="flex-1 bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 text-center">
+                    إلغاء
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function calculateSubcontractorAmount() {
+    const budget = parseFloat(document.querySelector('input[name="budget"]').value) || 0;
+    const percentage = parseFloat(document.getElementById('subcontractor_percentage').value) || 0;
+    
+    if (budget > 0 && percentage > 0) {
+        const amount = (budget * percentage / 100).toFixed(2);
+        document.getElementById('subcontractor_amount').value = amount;
+    }
+}
+</script>
+{% endblock %}
