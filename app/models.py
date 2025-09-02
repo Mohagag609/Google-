@@ -1,6 +1,6 @@
 """SQLAlchemy Models"""
-from db import db, TimestampMixin
-from utils import generate_uuid, d
+from .db import db, TimestampMixin
+from .utils import generate_uuid, d
 from decimal import Decimal
 import json
 

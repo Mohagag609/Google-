@@ -1,10 +1,10 @@
 """Settlement calculation and posting service"""
-from db import db
-from models import (
+from ..db import db
+from ..models import (
     Project, ProjectPartner, Expense, StockMove, Voucher,
     PartnerSettleBatch, PartnerSettleLine, PartnerClaim
 )
-from utils import d, ValidationError
+from ..utils import d, ValidationError
 from datetime import datetime
 from decimal import Decimal
 

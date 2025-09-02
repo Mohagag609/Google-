@@ -1,7 +1,7 @@
 """Cost allocation service"""
-from db import db
-from models import Stage, Expense, StockMove, Allocation, ProjectPartner
-from utils import d, ValidationError
+from ..db import db
+from ..models import Stage, Expense, StockMove, Allocation, ProjectPartner
+from ..utils import d, ValidationError
 from datetime import date
 from decimal import Decimal
 import json

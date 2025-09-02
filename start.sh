@@ -18,7 +18,7 @@ pip3 install --break-system-packages -r requirements.txt -q
 
 # Initialize database
 echo "🗄️ Initializing database..."
-python3 -c "from app.app import app, db; app.app_context().push(); db.create_all(); print('✅ Database ready')"
+python3 -c "from app import app; from app.db import db; app.app_context().push(); db.create_all(); print('✅ Database ready')"
 
 # Start the application
 echo "🌟 Starting application..."

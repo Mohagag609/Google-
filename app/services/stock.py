@@ -1,7 +1,7 @@
 """Stock management service"""
-from db import db
-from models import StockMove, Item, Expense, Warehouse
-from utils import d, ValidationError
+from ..db import db
+from ..models import StockMove, Item, Expense, Warehouse
+from ..utils import d, ValidationError
 from datetime import date
 from decimal import Decimal
 

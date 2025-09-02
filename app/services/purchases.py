@@ -1,7 +1,7 @@
 """Purchase invoice and stock-in service"""
-from db import db
-from models import PurchaseInvoice, PurchaseInvoiceItem, StockMove, Warehouse
-from utils import d, ValidationError
+from ..db import db
+from ..models import PurchaseInvoice, PurchaseInvoiceItem, StockMove, Warehouse
+from ..utils import d, ValidationError
 from datetime import date
 from decimal import Decimal
 

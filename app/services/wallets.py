@@ -1,7 +1,7 @@
 """Wallet management service"""
-from db import db
-from models import ProjectPartner, Voucher
-from utils import d, generate_ref_code, ValidationError
+from ..db import db
+from ..models import ProjectPartner, Voucher
+from ..utils import d, generate_ref_code, ValidationError
 from datetime import date
 from decimal import Decimal
 

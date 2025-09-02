@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 """Main entry point for the application"""
 import os
-import sys
-
-# Add app directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'app'))
 
 from app import app
 

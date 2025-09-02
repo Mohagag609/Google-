@@ -1,10 +1,10 @@
 """Reporting service"""
-from db import db
-from models import (
+from ..db import db
+from ..models import (
     ProjectPartner, Voucher, Allocation, Expense,
     Stage, StockMove, PartnerSettleLine
 )
-from utils import d
+from ..utils import d
 from decimal import Decimal
 import csv
 from io import StringIO

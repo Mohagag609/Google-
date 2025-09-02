@@ -1,9 +1,9 @@
 """Main Flask application"""
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, make_response
-from db import init_db, db
-from models import *
-from utils import *
-from services import wallets, allocations, settlements, purchases, stock, reports, backup
+from .db import init_db, db
+from .models import *
+from .utils import *
+from .services import wallets, allocations, settlements, purchases, stock, reports, backup
 from datetime import datetime, date
 import os
 from decimal import Decimal
