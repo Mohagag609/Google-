@@ -280,9 +280,77 @@ def withdraw_wallet(project_id, partner_id):
         return redirect(url_for('project_home', project_id=project_id))
 
 # Stages
+@app.route('/stages')
+def stages_list():
+    """List all stages"""
+    project_id = request.args.get('project_id')
+    
+    query = Stage.query
+    if project_id:
+        query = query.filter_by(project_id=project_id)
+    
+    stages = query.order_by(Stage.created_at.desc()).all()
+    projects = Project.query.all()
+    
+    return render_template('stages/index.html',
+                         stages=stages,
+                         projects=projects,
+                         selected_project=project_id)
+
+@app.route('/stages/new')
+def new_stage():
+    """New stage form"""
+    projects = Project.query.all()
+    return render_template('stages/new.html', projects=projects)
+
+@app.route('/stages/create', methods=['POST'])
+def create_stage_new():
+    """Create new stage with subcontractor"""
+    try:
+        project_id = request.form.get('project_id')
+        name = request.form.get('name')
+        budget = d(request.form.get('budget', 0))
+        status = request.form.get('status', 'open')
+        
+        # Subcontractor info
+        subcontractor_name = request.form.get('subcontractor_name')
+        subcontractor_percentage = d(request.form.get('subcontractor_percentage', 0))
+        subcontractor_amount = d(request.form.get('subcontractor_amount', 0))
+        
+        stage = Stage(
+            project_id=project_id,
+            name=name,
+            budget=budget,
+            status=status,
+            subcontractor_name=subcontractor_name if subcontractor_name else None,
+            subcontractor_percentage=subcontractor_percentage if subcontractor_name else None,
+            subcontractor_amount=subcontractor_amount if subcontractor_name else None
+        )
+        db.session.add(stage)
+        db.session.commit()
+        
+        flash_success(f"تم إنشاء المرحلة: {name}")
+        return redirect(url_for('stages_list', project_id=project_id))
+    
+    except Exception as e:
+        flash_error(str(e))
+        return redirect(url_for('new_stage'))
+
+@app.route('/stages/<stage_id>')
+def stage_details(stage_id):
+    """Stage details page"""
+    stage = Stage.query.get_or_404(stage_id)
+    expenses = Expense.query.filter_by(stage_id=stage_id).order_by(Expense.date.desc()).all()
+    allocations = Allocation.query.filter_by(stage_id=stage_id).order_by(Allocation.alloc_date.desc()).all()
+    
+    return render_template('stages/details.html',
+                         stage=stage,
+                         expenses=expenses,
+                         allocations=allocations)
+
 @app.route('/projects/<project_id>/stages', methods=['POST'])
 def create_stage(project_id):
-    """Create new stage"""
+    """Create new stage (from project page)"""
     try:
         name = request.form.get('name')
         budget = d(request.form.get('budget', 0))

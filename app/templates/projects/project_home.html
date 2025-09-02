@@ -16,7 +16,7 @@
     </div>
     
     <!-- Project Summary -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t">
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6 pt-6 border-t">
         <div>
             <p class="text-sm text-gray-500">إجمالي التكاليف</p>
             <p class="text-xl font-bold text-blue-600">{{ summary.total_cost|money }}</p>
@@ -32,6 +32,12 @@
         <div>
             <p class="text-sm text-gray-500">عدد المراحل</p>
             <p class="text-xl font-bold text-gray-600">{{ stages|length }}</p>
+        </div>
+        <div>
+            <p class="text-sm text-gray-500">نسب الشركاء</p>
+            <p class="text-xl font-bold {% if total_shares == 100 %}text-green-600{% else %}text-red-600{% endif %}">
+                {{ total_shares }}%
+            </p>
         </div>
     </div>
 </div>

@@ -1,0 +1,85 @@
+{% extends "layout.html" %}
+
+{% block title %}المراحل - نظام إدارة المقاولات{% endblock %}
+
+{% block content %}
+<div class="container mx-auto">
+    <h1 class="text-3xl font-bold mb-8">إدارة المراحل</h1>
+    
+    <!-- Filter by Project -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <form method="GET" action="/stages" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <select name="project_id" onchange="this.form.submit()" class="px-4 py-2 border rounded-lg">
+                <option value="">جميع المشاريع</option>
+                {% for project in projects %}
+                    <option value="{{ project.id }}" {% if selected_project == project.id %}selected{% endif %}>
+                        {{ project.name }}
+                    </option>
+                {% endfor %}
+            </select>
+            <a href="/stages/new" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 text-center">
+                + إضافة مرحلة جديدة
+            </a>
+        </form>
+    </div>
+    
+    <!-- Stages Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for stage in stages %}
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h3 class="text-xl font-bold">{{ stage.name }}</h3>
+                    <p class="text-sm text-gray-600">{{ stage.project.name }}</p>
+                </div>
+                <span class="px-3 py-1 text-xs rounded-full {% if stage.status == 'open' %}bg-green-100 text-green-700{% else %}bg-gray-100 text-gray-700{% endif %}">
+                    {{ 'مفتوح' if stage.status == 'open' else 'مغلق' }}
+                </span>
+            </div>
+            
+            <!-- Stage Details -->
+            <div class="space-y-2 mb-4">
+                <div class="flex justify-between">
+                    <span class="text-gray-600">الموازنة:</span>
+                    <span class="font-bold">{{ stage.budget|money }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">المصروفات:</span>
+                    <span class="font-bold text-red-600">{{ stage.total_expenses|money }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">المتبقي:</span>
+                    <span class="font-bold text-green-600">{{ (stage.budget - stage.total_expenses)|money }}</span>
+                </div>
+                {% if stage.subcontractor_name %}
+                <div class="pt-2 border-t">
+                    <p class="text-sm text-gray-600">مقاول الباطن:</p>
+                    <p class="font-semibold">{{ stage.subcontractor_name }}</p>
+                    <p class="text-sm">النسبة: {{ stage.subcontractor_percentage }}%</p>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Actions -->
+            <div class="flex gap-2">
+                <a href="/stages/{{ stage.id }}" class="flex-1 bg-blue-600 text-white px-3 py-2 rounded text-center hover:bg-blue-700 text-sm">
+                    التفاصيل
+                </a>
+                <a href="/stages/{{ stage.id }}/expenses" class="flex-1 bg-green-600 text-white px-3 py-2 rounded text-center hover:bg-green-700 text-sm">
+                    المصروفات
+                </a>
+                <a href="/stages/{{ stage.id }}/allocate" class="flex-1 bg-purple-600 text-white px-3 py-2 rounded text-center hover:bg-purple-700 text-sm">
+                    توزيع
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    {% if not stages %}
+    <div class="bg-white rounded-lg shadow-lg p-8 text-center text-gray-500">
+        لا توجد مراحل
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

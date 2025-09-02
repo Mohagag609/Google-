@@ -108,12 +108,23 @@ class Stage(db.Model, TimestampMixin):
     name = db.Column(db.String(200), nullable=False)
     budget = db.Column(db.Numeric(14, 2), default=Decimal('0'), nullable=False)
     status = db.Column(db.String(20), default='open', nullable=False)
+    # Subcontractor fields
+    subcontractor_name = db.Column(db.String(200), nullable=True)
+    subcontractor_percentage = db.Column(db.Numeric(5, 2), default=Decimal('0'), nullable=True)
+    subcontractor_amount = db.Column(db.Numeric(14, 2), default=Decimal('0'), nullable=True)
     
     # Relationships
     project = db.relationship('Project', back_populates='stages')
     expenses = db.relationship('Expense', back_populates='stage')
     stock_moves = db.relationship('StockMove', back_populates='stage')
     allocations = db.relationship('Allocation', back_populates='stage')
+    
+    @property
+    def total_expenses(self):
+        """Calculate total expenses for this stage"""
+        from sqlalchemy import func
+        total = db.session.query(func.sum(Expense.amount)).filter_by(stage_id=self.id).scalar()
+        return d(total) if total else Decimal('0')
 
 # Purchases & Stock
 class PurchaseInvoice(db.Model, TimestampMixin):

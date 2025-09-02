@@ -80,16 +80,24 @@
 
 <script>
 let itemCount = 0;
-const items = {{ items|tojson }};
+const items = {{ items|tojson if items else '[]'|safe }};
 
 function addInvoiceItem() {
     const container = document.getElementById('items-container');
     const row = document.createElement('tr');
+    
+    // Build options HTML
+    let optionsHTML = '<option value="">اختر الصنف</option>';
+    if (items && items.length > 0) {
+        items.forEach(item => {
+            optionsHTML += `<option value="${item.id}" data-cost="${item.std_cost}">${item.name}</option>`;
+        });
+    }
+    
     row.innerHTML = `
         <td class="px-4 py-2">
             <select name="item_id_${itemCount}" required class="w-full px-2 py-1 border rounded" onchange="updateItemCost(${itemCount})">
-                <option value="">اختر الصنف</option>
-                ${items.map(item => `<option value="${item.id}" data-cost="${item.std_cost}">${item.name}</option>`).join('')}
+                ${optionsHTML}
             </select>
         </td>
         <td class="px-4 py-2">
